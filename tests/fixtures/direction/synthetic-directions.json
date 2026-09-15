@@ -1,0 +1,28 @@
+{
+  "boundaryAngles": [
+    { "input": 0.0, "expectedSector": "N" },
+    { "input": 15.0, "expectedSector": "N" },
+    { "input": 22.4, "expectedSector": "N" },
+    { "input": 22.5, "expectedSector": "NE" },
+    { "input": 45.0, "expectedSector": "NE" },
+    { "input": 67.4, "expectedSector": "NE" },
+    { "input": 67.5, "expectedSector": "E" },
+    { "input": 90.0, "expectedSector": "E" },
+    { "input": 112.5, "expectedSector": "SE" },
+    { "input": 135.0, "expectedSector": "SE" },
+    { "input": 157.5, "expectedSector": "S" },
+    { "input": 180.0, "expectedSector": "S" },
+    { "input": 202.5, "expectedSector": "SW" },
+    { "input": 225.0, "expectedSector": "SW" },
+    { "input": 247.5, "expectedSector": "W" },
+    { "input": 270.0, "expectedSector": "W" },
+    { "input": 292.5, "expectedSector": "NW" },
+    { "input": 315.0, "expectedSector": "NW" },
+    { "input": 337.4, "expectedSector": "NW" },
+    { "input": 337.5, "expectedSector": "N" },
+    { "input": 359.9, "expectedSector": "N" },
+    { "input": 360.0, "expectedSector": "N" },
+    { "input": -45.0, "expectedSector": "NW" },
+    { "input": 720.0, "expectedSector": "N" }
+  ]
+}

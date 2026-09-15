@@ -1,0 +1,61 @@
+{
+  "version": "1.0",
+  "description": "ZWTSP Deterministic Verification Fixture Dataset",
+  "test_draws": [
+    {
+      "issue": "2026001",
+      "date": "2026-09-01",
+      "time": "20:30:00",
+      "winning_numbers": [5, 7, 2, 9],
+      "digit_sum": 23,
+      "digital_root": 5,
+      "dominant_element": "Fire"
+    },
+    {
+      "issue": "2026002",
+      "date": "2026-09-02",
+      "time": "20:30:00",
+      "winning_numbers": [7, 7, 5, 2],
+      "digit_sum": 21,
+      "digital_root": 3,
+      "dominant_element": "Fire"
+    },
+    {
+      "issue": "2026003",
+      "date": "2026-09-03",
+      "time": "20:30:00",
+      "winning_numbers": [3, 8, 1, 6],
+      "digit_sum": 18,
+      "digital_root": 9,
+      "dominant_element": "Wood"
+    },
+    {
+      "issue": "2026004",
+      "date": "2026-09-04",
+      "time": "20:30:00",
+      "winning_numbers": [4, 9, 0, 5],
+      "digit_sum": 18,
+      "digital_root": 9,
+      "dominant_element": "Metal"
+    }
+  ],
+  "expected_element_mapping": {
+    "0": "Earth",
+    "1": "Water",
+    "2": "Fire",
+    "3": "Wood",
+    "4": "Metal",
+    "5": "Earth",
+    "6": "Water",
+    "7": "Fire",
+    "8": "Wood",
+    "9": "Metal"
+  },
+  "expected_hetu_pairs": [
+    [1, 6],
+    [2, 7],
+    [3, 8],
+    [4, 9],
+    [5, 0]
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "zwtsp-web",
+  "version": "1.0.0",
+  "private": true,
+  "imports": {
+    "@/*": "./*"
+  },
+  "description": "紫微时空数字预测系统 - Zi Wei Time-Space Numerology Prediction System",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "node tests/digit-foundation.test.mjs && node tests/number-features.test.mjs && node tests/scoring-and-bias.test.mjs && node tests/calendar-and-solarterms.test.mjs && node tests/ziwei-chart.test.mjs && node tests/daily-activation.test.mjs && node tests/direction-engine.test.mjs && node tests/number-synthesis.test.mjs && node tests/backtest-engine.test.mjs && node tests/malaysia-draws.test.mjs && node tests/classical-literature.test.mjs && node tests/canon-priority-engine.test.mjs && node tests/windfall-wealth-engine.test.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.475.0",
+    "next": "^14.2.24",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.19",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.2",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}

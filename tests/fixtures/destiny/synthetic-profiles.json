@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "description": "ZWTSP Synthetic Destiny & Daily Activation Test Fixtures",
+  "profiles": [
+    {
+      "id": "synthetic-male-1990",
+      "name": "测试甲男",
+      "gender": "male",
+      "birthDate": "1990-05-18",
+      "birthTime": "09:30:00",
+      "birthTimePrecision": "EXACT",
+      "timezone": "Asia/Shanghai",
+      "calendarType": "gregorian",
+      "expected": {
+        "lunarYear": 1990,
+        "lunarMonth": 4,
+        "lunarDay": 24,
+        "yearGanzhi": "庚午",
+        "dayMaster": "辛",
+        "bureau": "木三局"
+      }
+    },
+    {
+      "id": "synthetic-female-1995",
+      "name": "测试乙女",
+      "gender": "female",
+      "birthDate": "1995-10-24",
+      "birthTime": "14:15:00",
+      "birthTimePrecision": "EXACT",
+      "timezone": "Asia/Shanghai",
+      "calendarType": "gregorian",
+      "expected": {
+        "lunarYear": 1995,
+        "lunarMonth": 9,
+        "lunarDay": 1,
+        "yearGanzhi": "乙亥"
+      }
+    },
+    {
+      "id": "synthetic-unknown-hour",
+      "name": "测试时辰未知者",
+      "gender": "male",
+      "birthDate": "1988-08-08",
+      "birthTimePrecision": "UNKNOWN",
+      "timezone": "Asia/Shanghai",
+      "calendarType": "gregorian",
+      "expected": {
+        "isComplete": false,
+        "hourBranch": null
+      }
+    }
+  ]
+}

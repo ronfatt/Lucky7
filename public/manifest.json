@@ -1,0 +1,24 @@
+{
+  "name": "紫微时空数字预测系统 (ZWTSP)",
+  "short_name": "ZWTSP",
+  "description": "个人传统术数与历史统计回测决策辅助系统 · 时位象数行验",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070A12",
+  "theme_color": "#070A12",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

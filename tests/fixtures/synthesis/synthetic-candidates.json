@@ -1,0 +1,20 @@
+{
+  "goldenVectorTest": {
+    "profile": {
+      "name": "李知命",
+      "gender": "male",
+      "birthDate": "1990-05-18",
+      "birthTime": "09:30:00",
+      "birthTimePrecision": "EXACT",
+      "timezone": "Asia/Shanghai",
+      "calendarType": "gregorian"
+    },
+    "testDate": "2026-09-13",
+    "mockRealitySignal": {
+      "signalType": "VEHICLE_PLATE",
+      "rawValue": "S 5729",
+      "observationTime": "15:27:00",
+      "direction": "SW"
+    }
+  }
+}
