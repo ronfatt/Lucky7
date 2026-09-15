@@ -1,10 +1,12 @@
 // ==========================================================
-// 紫微时空数字预测系统 (ZWTSP) User Profile Store
+// 紫微时空数字预测系统 (ZWTSP) User Profile Store with Cloud Sync
 // File: lib/profile/user-profile-store.ts
+// Dual-track storage: LocalStorage + Supabase user_profiles
 // ==========================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type { BirthProfile } from '../../types/zwtsp.ts';
+import { supabase, isSupabaseConfigured } from '../supabase.ts';
 
 export const DEFAULT_USER_PROFILE: BirthProfile = {
   name: '李知命',
@@ -59,13 +61,16 @@ export function saveStoredUserProfile(profile: BirthProfile): void {
 
 /**
  * React hook that subscribes to user profile changes across all components/pages
+ * and syncs automatically with Supabase cloud database when logged in.
  */
 export function useUserProfile() {
   const [profile, setProfile] = useState<BirthProfile>(DEFAULT_USER_PROFILE);
   const [isReady, setIsReady] = useState(false);
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
+  // 1. Initial load from local storage
   useEffect(() => {
-    // Initial load from localStorage
     setProfile(getStoredUserProfile());
     setIsReady(true);
 
@@ -87,10 +92,106 @@ export function useUserProfile() {
     };
   }, []);
 
-  const updateProfile = (newProfile: BirthProfile) => {
-    setProfile(newProfile);
-    saveStoredUserProfile(newProfile);
-  };
+  // 2. Cloud sync listener with Supabase Auth
+  useEffect(() => {
+    if (!isSupabaseConfigured) return;
 
-  return { profile, updateProfile, isReady };
+    const syncCloudProfile = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (data && !error) {
+          const cloudProfile: BirthProfile = {
+            name: data.name || '命主',
+            gender: data.gender || 'male',
+            birthDate: data.birth_date || '1990-05-18',
+            birthTime: data.birth_time || '14:30:00',
+            birthPlace: data.birth_place || 'Kuala Lumpur',
+            timezone: data.timezone || 'Asia/Kuala_Lumpur',
+            calendarType: data.calendar_type || 'gregorian',
+            birthTimePrecision: 'EXACT',
+          };
+          setProfile(cloudProfile);
+          saveStoredUserProfile(cloudProfile);
+          setIsCloudSynced(true);
+        } else if (error && error.code !== 'PGRST116') {
+          console.warn('[UserProfileStore] Cloud sync read error:', error);
+        }
+      } catch (err) {
+        console.warn('[UserProfileStore] Cloud profile fetch error:', err);
+      }
+    };
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        syncCloudProfile(session.user.id);
+      } else {
+        setCurrentUserId(null);
+        setIsCloudSynced(false);
+      }
+    });
+
+    // Listen for auth transitions
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        syncCloudProfile(session.user.id);
+      } else {
+        setCurrentUserId(null);
+        setIsCloudSynced(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // 3. Update profile handler (writes to local storage + Supabase if authenticated)
+  const updateProfile = useCallback(
+    async (newProfile: BirthProfile) => {
+      setProfile(newProfile);
+      saveStoredUserProfile(newProfile);
+
+      if (isSupabaseConfigured && currentUserId) {
+        try {
+          const { error } = await supabase.from('user_profiles').upsert(
+            {
+              id: currentUserId,
+              name: newProfile.name,
+              gender: newProfile.gender,
+              birth_date: newProfile.birthDate,
+              birth_time: newProfile.birthTime,
+              birth_place: newProfile.birthPlace,
+              timezone: newProfile.timezone,
+              calendar_type: newProfile.calendarType,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: 'id' }
+          );
+
+          if (!error) {
+            setIsCloudSynced(true);
+          } else {
+            console.warn('[UserProfileStore] Failed to write profile to Supabase:', error);
+            setIsCloudSynced(false);
+          }
+        } catch (err) {
+          console.error('[UserProfileStore] Cloud write exception:', err);
+          setIsCloudSynced(false);
+        }
+      }
+    },
+    [currentUserId]
+  );
+
+  return { profile, updateProfile, isReady, isCloudSynced, currentUserId };
 }
