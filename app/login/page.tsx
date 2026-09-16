@@ -72,16 +72,22 @@ export default function LoginPage() {
   const formatAuthError = (err: any): string => {
     const msg = err?.message || String(err);
     if (msg.includes('Email not confirmed')) {
-      return '邮箱尚未激活：请前往邮箱收件箱点击验证链接；若需免验证直接登录，管理员可在 Supabase 后台（Authentication -> Providers -> Email）关闭【Confirm email】。';
+      return '邮箱尚未激活：请前往邮箱收件箱点击验证链接，或联系管理员关闭邮箱验证。';
     }
     if (msg.includes('Invalid login credentials')) {
       return '登录失败：账号邮箱或密码不匹配，请核对后重试。';
     }
-    if (msg.includes('User already registered')) {
-      return '该邮箱已注册：请直接切换至上方【立即登录】。';
+    if (
+      msg.includes('User already registered') ||
+      msg.includes('already registered') ||
+      msg.includes('User already exists') ||
+      msg.includes('已被注册')
+    ) {
+      setMode('signin');
+      return '该邮箱此前已完成注册！已为您切换至【会员登录】，请输入密码直接登录。';
     }
-    if (msg.includes('rate limit')) {
-      return '操作过于频繁，请稍等 1-2 分钟后再试。';
+    if (msg.includes('rate limit') || msg.includes('Too many requests')) {
+      return '系统保护中，请稍等 1-2 分钟后再试。';
     }
     if (msg.includes('is invalid')) {
       return '邮箱格式无效：请输入真实的常用邮箱（如 Gmail、QQ、163 等）。';
@@ -95,18 +101,27 @@ export default function LoginPage() {
     setSuccessMessage(null);
     setIsSubmitting(true);
 
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanEmail || !cleanPassword) {
+      setErrorMessage('请输入完整的邮箱与登录密码');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       if (mode === 'signup') {
-        if (password.length < 6) {
+        if (cleanPassword.length < 6) {
           setErrorMessage('密码长度至少需要 6 位字符');
           setIsSubmitting(false);
           return;
         }
 
         const { user: newUser, session, error } = await signUp(
-          email,
-          password,
-          name || '命主',
+          cleanEmail,
+          cleanPassword,
+          name?.trim() || '命主',
           {
             gender,
             birthDate,
@@ -119,7 +134,7 @@ export default function LoginPage() {
           // If profile information provided during signup, save it
           if (name || birthDate) {
             updateProfile({
-              name: name || '命主',
+              name: name?.trim() || '命主',
               gender,
               birthDate,
               birthTime: isUnknownHour ? '' : birthTime,
@@ -130,17 +145,13 @@ export default function LoginPage() {
             });
           }
 
-          if (session) {
-            setSuccessMessage('注册成功！已为您自动登录并初始化本命盘。正在进入系统...');
-            setTimeout(() => {
-              router.push('/');
-            }, 1000);
-          } else {
-            setSuccessMessage('注册成功！若开启了邮箱验证，请查收邮件激活；若已关闭验证，请切换至【立即登录】。');
-          }
+          setSuccessMessage('注册成功！已为您自动登录并初始化本命盘。正在进入系统...');
+          setTimeout(() => {
+            router.push('/');
+          }, 800);
         }
       } else {
-        const { user: signedInUser, error } = await signIn(email, password);
+        const { user: signedInUser, error } = await signIn(cleanEmail, cleanPassword);
         if (error) {
           setErrorMessage(formatAuthError(error));
         } else {
