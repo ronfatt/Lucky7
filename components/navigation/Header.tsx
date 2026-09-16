@@ -16,12 +16,16 @@ import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/lib/auth/auth-store';
 import { useUserProfile } from '@/lib/profile/user-profile-store';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { MemberCenterModal } from '@/components/auth/MemberCenterModal';
+import { EditProfileModal } from '@/components/destiny/EditProfileModal';
 
 export function Header() {
   const todayStr = '2026年9月13日 · 丙午年 丁酉月 辛未日';
   const { user, isAuthenticated, signOut, loading } = useAuth();
-  const { profile, isCloudSynced } = useUserProfile();
+  const { profile, updateProfile, isCloudSynced } = useUserProfile();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isMemberCenterOpen, setIsMemberCenterOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
 
   return (
     <header className="h-16 border-b border-gold-500/15 bg-obsidian-950/60 backdrop-blur-xl px-4 sm:px-8 flex items-center justify-between sticky top-0 z-30">
@@ -53,7 +57,11 @@ export function Header() {
           <div className="h-7 w-20 bg-slate-800/60 animate-pulse rounded-xl" />
         ) : isAuthenticated && user ? (
           <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold-500/10 border border-gold-500/30 text-xs text-gold-300">
+            <button
+              onClick={() => setIsMemberCenterOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/30 text-xs text-gold-300 transition cursor-pointer"
+              title="点击查看会员中心与命盘"
+            >
               <User className="w-3.5 h-3.5 text-gold-400" />
               <span className="font-medium max-w-[90px] truncate">{profile.name || user.email?.split('@')[0]}</span>
               {isCloudSynced && (
@@ -61,7 +69,7 @@ export function Header() {
                   <Cloud className="w-3 h-3 text-emerald-400" />
                 </span>
               )}
-            </div>
+            </button>
             <button
               onClick={() => signOut()}
               title="退出登录"
@@ -84,6 +92,19 @@ export function Header() {
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
+      />
+
+      <MemberCenterModal
+        isOpen={isMemberCenterOpen}
+        onClose={() => setIsMemberCenterOpen(false)}
+        onOpenEditProfile={() => setIsEditProfileOpen(true)}
+      />
+
+      <EditProfileModal
+        isOpen={isEditProfileOpen}
+        onClose={() => setIsEditProfileOpen(false)}
+        currentProfile={profile}
+        onSave={(updated) => updateProfile(updated)}
       />
     </header>
   );

@@ -4,6 +4,8 @@
 // Tracks historical prediction performance and metaphysical correlation insights
 // ==========================================================
 
+import { supabase, isSupabaseConfigured } from '../supabase';
+
 export interface PredictionLedgerEntry {
   id: string;
   date: string;
@@ -136,7 +138,80 @@ export class PredictionLedgerStore {
     };
     const updated = [newEntry, ...list];
     this.persist(updated);
+
+    // Sync to Supabase prediction_ledger table
+    if (isSupabaseConfigured && typeof window !== 'undefined') {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.id) {
+          supabase
+            .from('prediction_ledger')
+            .insert({
+              user_id: session.user.id,
+              target_date: entry.date,
+              day_stem_branch: entry.dayStemBranch,
+              mother_code: entry.motherCode,
+              score: entry.score,
+              windfall_score: entry.windfallScore,
+              windfall_suitability: entry.windfallSuitability,
+              has_hit: entry.hasHit,
+              hit_type: entry.hitType,
+              hit_tier: entry.hitTier,
+              hit_operator: entry.hitOperator,
+              hit_date: entry.hitDate === '-' ? null : entry.hitDate,
+              notes: entry.notes || null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn('[PredictionLedger] Cloud sync insert error:', error.message);
+            });
+        }
+      });
+    }
+
     return newEntry;
+  }
+
+  /**
+   * Syncs ledger records from Supabase and merges into local state
+   */
+  public static async syncFromCloud(): Promise<void> {
+    if (!isSupabaseConfigured || typeof window === 'undefined') return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('prediction_ledger')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (data && !error && data.length > 0) {
+        const local = this.getAll();
+        const merged = [...local];
+        for (const row of data) {
+          if (!merged.some((m) => m.motherCode === row.mother_code && m.date === row.target_date)) {
+            merged.push({
+              id: row.id,
+              date: row.target_date,
+              dayStemBranch: row.day_stem_branch || '',
+              motherCode: row.mother_code,
+              score: Number(row.score) || 80,
+              windfallScore: Number(row.windfall_score) || 70,
+              windfallSuitability: row.windfall_suitability || '平顺',
+              hasHit: Boolean(row.has_hit),
+              hitType: row.hit_type || 'NONE',
+              hitTier: row.hit_tier || '-',
+              hitOperator: row.hit_operator || '-',
+              hitDate: row.hit_date || '-',
+              notes: row.notes || '',
+            });
+          }
+        }
+        this.persist(merged);
+      }
+    } catch (err) {
+      console.warn('[PredictionLedger] Cloud sync fetch error:', err);
+    }
   }
 
   public static getMetrics(): LedgerMetrics {

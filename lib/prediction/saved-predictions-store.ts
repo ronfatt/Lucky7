@@ -4,6 +4,8 @@
 // Persists user favorite predicted numbers in localStorage
 // ==========================================================
 
+import { supabase, isSupabaseConfigured } from '../supabase';
+
 export interface SavedPredictionItem {
   id: string;
   number: string;
@@ -86,6 +88,29 @@ export class SavedPredictionsStore {
 
     const updated = [newItem, ...list];
     this.persist(updated);
+
+    // Sync to Supabase if logged in
+    if (isSupabaseConfigured && typeof window !== 'undefined') {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.id) {
+          supabase
+            .from('saved_predictions')
+            .insert({
+              user_id: session.user.id,
+              number: cleanNum,
+              source_type: item.sourceType,
+              source_title_zh: item.sourceTitleZh,
+              score: item.score,
+              target_date: item.date,
+              notes: item.notes || null,
+            })
+            .then(({ error }) => {
+              if (error) console.warn('[SavedPredictions] Cloud sync insert error:', error.message);
+            });
+        }
+      });
+    }
+
     return { success: true, isNew: true, item: newItem };
   }
 
@@ -94,8 +119,65 @@ export class SavedPredictionsStore {
    */
   public static remove(id: string): void {
     const list = this.getAll();
+    const target = list.find((p) => p.id === id);
     const updated = list.filter((p) => p.id !== id);
     this.persist(updated);
+
+    // Sync deletion to Supabase
+    if (isSupabaseConfigured && target && typeof window !== 'undefined') {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user?.id) {
+          supabase
+            .from('saved_predictions')
+            .delete()
+            .eq('user_id', session.user.id)
+            .eq('number', target.number)
+            .eq('target_date', target.date)
+            .then(({ error }) => {
+              if (error) console.warn('[SavedPredictions] Cloud delete error:', error.message);
+            });
+        }
+      });
+    }
+  }
+
+  /**
+   * Pulls saved predictions from Supabase and merges into local state
+   */
+  public static async syncFromCloud(): Promise<void> {
+    if (!isSupabaseConfigured || typeof window === 'undefined') return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+
+      const { data, error } = await supabase
+        .from('saved_predictions')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false });
+
+      if (data && !error && data.length > 0) {
+        const local = this.getAll();
+        const merged = [...local];
+        for (const row of data) {
+          if (!merged.some((m) => m.number === row.number && m.date === row.target_date)) {
+            merged.push({
+              id: row.id,
+              number: row.number,
+              sourceType: row.source_type || 'MOTHER_CODE',
+              sourceTitleZh: row.source_title_zh || '云端收藏',
+              date: row.target_date,
+              score: Number(row.score) || 80,
+              notes: row.notes || undefined,
+              savedAt: row.created_at,
+            });
+          }
+        }
+        this.persist(merged);
+      }
+    } catch (err) {
+      console.warn('[SavedPredictions] Failed to pull cloud favorites:', err);
+    }
   }
 
   /**

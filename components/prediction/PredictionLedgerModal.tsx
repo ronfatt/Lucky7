@@ -37,6 +37,9 @@ export function PredictionLedgerModal({ isOpen, onClose }: PredictionLedgerModal
   useEffect(() => {
     if (isOpen) {
       setEntries(PredictionLedgerStore.getAll());
+      PredictionLedgerStore.syncFromCloud().then(() => {
+        setEntries(PredictionLedgerStore.getAll());
+      });
     }
   }, [isOpen]);
 

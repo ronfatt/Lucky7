@@ -50,6 +50,7 @@ export function SavedPredictionsModal({
   useEffect(() => {
     if (isOpen) {
       loadData();
+      SavedPredictionsStore.syncFromCloud().then(() => loadData());
     }
   }, [isOpen]);
 

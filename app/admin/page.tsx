@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Sliders, ShieldAlert, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { DatabaseManagerView } from '@/components/admin/DatabaseManagerView';
 
 export default function AdminPage() {
   return (
@@ -16,12 +17,15 @@ export default function AdminPage() {
             </span>
             <div>
               <h2 className="text-xl font-serif font-bold text-slate-100">算法调优与管理中台 · Admin Panel</h2>
-              <p className="text-xs text-slate-400">9 维权重配置调优、算法版本发布与系统审计日志</p>
+              <p className="text-xs text-slate-400">9 维权重配置调优、Supabase 云端数据库治理与系统审计</p>
             </div>
           </div>
-          <Badge variant="danger">Phase 8 管理员专区</Badge>
+          <Badge variant="gold">Phase 8 管理员专区</Badge>
         </div>
       </div>
+
+      {/* Supabase Cloud Database Manager */}
+      <DatabaseManagerView />
 
       <Card className="border-gold-500/20">
         <CardHeader>
