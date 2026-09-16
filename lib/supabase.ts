@@ -15,7 +15,7 @@ const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
   'sb_publishable_Q8-WFnvdnOPo0bhvakr-ig_baP1q7Fi';
 
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl && !supabaseUrl.includes('mock-zwtsp')
