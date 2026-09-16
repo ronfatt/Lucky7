@@ -29,6 +29,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const { profile, updateProfile } = useUserProfile();
 
+  // Telemetry: Track page views on route transitions
+  useEffect(() => {
+    if (isAuthenticated && pathname !== '/login') {
+      import('@/lib/telemetry/tracker').then(({ tracker }) => {
+        tracker.trackPageView(pathname);
+      });
+    }
+  }, [pathname, isAuthenticated]);
+
   // Mandatory Auth Barrier: If not authenticated and not on /login, redirect immediately
   useEffect(() => {
     if (!loading && !isAuthenticated && pathname !== '/login') {

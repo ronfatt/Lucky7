@@ -236,3 +236,58 @@ CREATE TABLE IF NOT EXISTS public.numerology_rules (
 ALTER TABLE public.numerology_rules ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Public can view numerology rules" ON public.numerology_rules;
 CREATE POLICY "Public can view numerology rules" ON public.numerology_rules FOR SELECT USING (true);
+
+-- ----------------------------------------------------------------------
+-- 7. 全息用户行为日志与运营分析数据表 (USER ACTIVITY LOGS & TELEMETRY)
+-- ----------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.user_activity_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_email TEXT,
+  user_name TEXT,
+  event_type VARCHAR(64) NOT NULL, -- auth.login, auth.logout, auth.register, prediction.generate, prediction.save, compass.query, destiny.view, page.view
+  event_label TEXT NOT NULL,       -- 人类可读描述，如 '用户登录系统'、'推演今日四位数 [8823]'
+  page_path TEXT,                  -- 路由路径
+  metadata JSONB NOT NULL DEFAULT '{}'::jsonb, -- 设备指纹、停留时长、推演号码、彩种等
+  ip_address TEXT,
+  user_agent TEXT,
+  session_id TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON public.user_activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_event_type ON public.user_activity_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON public.user_activity_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_email ON public.user_activity_logs(user_email);
+
+ALTER TABLE public.user_activity_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow inserts for activity logs" ON public.user_activity_logs;
+CREATE POLICY "Allow inserts for activity logs"
+  ON public.user_activity_logs FOR INSERT
+  WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow select for authenticated user own logs" ON public.user_activity_logs;
+CREATE POLICY "Allow select for authenticated user own logs"
+  ON public.user_activity_logs FOR SELECT
+  USING (auth.uid() = user_id OR auth.role() = 'service_role');
+
+-- 扩充 user_profiles 统计字段
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='last_login_at') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN last_login_at TIMESTAMPTZ;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='last_logout_at') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN last_logout_at TIMESTAMPTZ;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='login_count') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN login_count INT NOT NULL DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='total_actions') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN total_actions INT NOT NULL DEFAULT 0;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='user_profiles' AND column_name='last_device') THEN
+    ALTER TABLE public.user_profiles ADD COLUMN last_device TEXT;
+  END IF;
+END $$;

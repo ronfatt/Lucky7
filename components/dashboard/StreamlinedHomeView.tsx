@@ -43,6 +43,7 @@ import { useUserProfile } from '@/lib/profile/user-profile-store';
 import { FourPillarsEngine } from '@/lib/engines/four-pillars/four-pillars-engine';
 import { ZiWeiEngine } from '@/lib/engines/ziwei/ziwei-engine';
 import { PersonalNumberDNAEngine } from '@/lib/engines/personal-dna/personal-dna-engine';
+import { tracker } from '@/lib/telemetry/tracker';
 import { DailyEngine } from '@/lib/engines/daily/daily-engine';
 import { PersonalDirectionEngine } from '@/lib/directions/personal-direction-engine';
 import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
@@ -193,6 +194,7 @@ export function StreamlinedHomeView() {
       score: motherCode.score,
       notes: `干支【${dailySig.dayStemBranch}】推算，偏财指数 ${windfallAnalysis.score} 分`,
     });
+    tracker.trackBookmark(motherCode.motherCode, '主页核心推演母码');
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2500);
   };
@@ -210,6 +212,11 @@ export function StreamlinedHomeView() {
     });
     const success = await SocialShareHelper.copyToClipboard(text);
     if (success) {
+      tracker.track({
+        eventType: 'prediction.share',
+        eventLabel: `分享每日测算报告 [${motherCode.motherCode}]`,
+        metadata: { number: motherCode.motherCode, date: selectedDate },
+      });
       setIsReportCopied(true);
       setTimeout(() => setIsReportCopied(false), 2500);
     }
@@ -217,6 +224,10 @@ export function StreamlinedHomeView() {
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    tracker.trackPrediction(motherCode.motherCode, motherCode.score, {
+      type: 'manual_recalculate',
+      stemBranch: dailySig.dayStemBranch,
+    });
     setTimeout(() => {
       setRefreshCount((prev) => prev + 1);
       setIsRefreshing(false);

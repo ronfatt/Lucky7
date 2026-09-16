@@ -1,53 +1,221 @@
-import React from 'react';
+// ==========================================================
+// 紫微时空数字预测系统 (ZWTSP) Admin Operations & Intelligence Hub
+// File: app/admin/page.tsx
+// Comprehensive analytics, user roster, habit profiling, telemetry logs & DB manager
+// ==========================================================
+
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Sliders, ShieldAlert, ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import {
+  BarChart3,
+  Users,
+  History,
+  Database,
+  Sliders,
+  ShieldCheck,
+  RefreshCw,
+  Sparkles,
+  Layers,
+} from 'lucide-react';
+
+import { AdminOverviewDashboard } from '@/components/admin/AdminOverviewDashboard';
+import { AdminUsersView } from '@/components/admin/AdminUsersView';
+import { AdminActivityLogsView } from '@/components/admin/AdminActivityLogsView';
 import { DatabaseManagerView } from '@/components/admin/DatabaseManagerView';
 
 export default function AdminPage() {
+  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs' | 'database'>('overview');
+
+  // Overview Data State
+  const [overviewData, setOverviewData] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(true);
+
+  // Users Data State
+  const [usersList, setUsersList] = useState<any[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+
+  const fetchOverview = async () => {
+    setOverviewLoading(true);
+    try {
+      const res = await fetch('/api/admin/analytics/overview');
+      const data = await res.json();
+      if (data.success) {
+        setOverviewData(data.data);
+      }
+    } catch (e) {
+      console.error('Fetch overview error:', e);
+    } finally {
+      setOverviewLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    try {
+      const res = await fetch('/api/admin/analytics/users');
+      const data = await res.json();
+      if (data.success) {
+        setUsersList(data.data.users);
+      }
+    } catch (e) {
+      console.error('Fetch users error:', e);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOverview();
+    fetchUsers();
+  }, []);
+
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="p-6 rounded-2xl glass-panel border border-gold-500/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="p-2 rounded-lg bg-gold-500/20 text-gold-champagne">
-              <Sliders className="w-5 h-5" />
-            </span>
-            <div>
-              <h2 className="text-xl font-serif font-bold text-slate-100">算法调优与管理中台 · Admin Panel</h2>
-              <p className="text-xs text-slate-400">9 维权重配置调优、Supabase 云端数据库治理与系统审计</p>
-            </div>
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Top Banner */}
+      <div className="p-5 sm:p-6 rounded-2xl glass-panel border border-gold-500/25 bg-gradient-to-r from-obsidian-950 via-[#0B0F1E] to-obsidian-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-500 via-gold-600 to-amber-700 text-obsidian-950 font-serif font-black text-xl flex items-center justify-center shadow-gold-glow shrink-0">
+            中
           </div>
-          <Badge variant="gold">Phase 8 管理员专区</Badge>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-serif font-bold text-slate-100 tracking-wide">
+                紫微时空数字预测系统 · 运营数据中台
+              </h1>
+              <Badge variant="gold" className="text-[10px] hidden sm:inline-flex">
+                Admin Center
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5 font-serif">
+              全方位会员行为收集 · 登录登出流水追踪 · 习惯热力洞察 · 云端数据库治理
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 self-end sm:self-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              fetchOverview();
+              fetchUsers();
+            }}
+            className="text-xs flex items-center gap-1.5 border-slate-700 hover:border-gold-500/50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${overviewLoading || usersLoading ? 'animate-spin' : ''}`} />
+            <span>实时同步</span>
+          </Button>
         </div>
       </div>
 
-      {/* Supabase Cloud Database Manager */}
-      <DatabaseManagerView />
+      {/* Navigation Tabs */}
+      <div className="flex items-center gap-1 sm:gap-2 p-1 bg-obsidian-950 rounded-2xl border border-slate-800 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveTab('overview')}
+          className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            activeTab === 'overview'
+              ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <BarChart3 className="w-4 h-4" />
+          <span>全局数据看板</span>
+        </button>
 
-      <Card className="border-gold-500/20">
-        <CardHeader>
-          <CardTitle>
-            <ShieldAlert className="w-4 h-4 text-gold-champagne" />
-            权限与安全性隔离 (RBAC Policy)
-          </CardTitle>
-          <CardDescription>
-            普通用户仅能查看推演结果，严禁修改底层算法与核心玄学规则映射。
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-xs text-slate-300 leading-relaxed">
-            管理中台支持管理员在数据库层直接调整：个人本命（15%）、时空八字（15%）、紫微星曜（10%）、四化飞星（5%）、五行生克（10%）、河洛九宫（10%）、现实观象（5%）、历史统计（20%）、数理结构（10%）等权重，每次调整均必须生成新的版本号并记录于系统日志。
-          </p>
-          <Link href="/rules">
-            <Button variant="outline" size="sm">
-              查看当前生效规则库 (Rules Repository)
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
+        <button
+          type="button"
+          onClick={() => setActiveTab('users')}
+          className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            activeTab === 'users'
+              ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>会员档案与习惯 ({usersList.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('logs')}
+          className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            activeTab === 'logs'
+              ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>全息实时流水</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('database')}
+          className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            activeTab === 'database'
+              ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
+              : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          <span>数据库与算法</span>
+        </button>
+      </div>
+
+      {/* Tab Panels */}
+      <div>
+        {activeTab === 'overview' && (
+          <AdminOverviewDashboard
+            data={overviewData}
+            loading={overviewLoading}
+            onRefresh={fetchOverview}
+          />
+        )}
+
+        {activeTab === 'users' && (
+          <AdminUsersView
+            users={usersList}
+            loading={usersLoading}
+            onRefresh={fetchUsers}
+          />
+        )}
+
+        {activeTab === 'logs' && <AdminActivityLogsView />}
+
+        {activeTab === 'database' && (
+          <div className="space-y-6">
+            <DatabaseManagerView />
+
+            <Card className="border-gold-500/20 bg-obsidian-950/60">
+              <CardHeader>
+                <CardTitle className="text-sm text-gold-200 flex items-center gap-2">
+                  <Sliders className="w-4 h-4 text-gold-400" />
+                  <span>9 维算法权重调优策略 (Algorithm Weights & Governance)</span>
+                </CardTitle>
+                <CardDescription className="text-xs text-slate-400">
+                  普通用户仅能查阅推演结果，管理员可在此审查底层算法与经典古籍映射逻辑。
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  当前生效调优结构：个人本命（15%）、时空八字（15%）、紫微星曜（10%）、四化飞星（5%）、五行生克（10%）、河洛九宫（10%）、现实观象（5%）、历史统计（20%）、数理结构（10%）。每次微调均由系统自动记录审计版本号并生成版本快照。
+                </p>
+                <a href="/rules">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    查看当前生效规则库 (Rules Repository)
+                  </Button>
+                </a>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -8,7 +8,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
+import { tracker } from '@/lib/telemetry/tracker';
 
 export interface AuthState {
   user: User | null;
@@ -94,8 +95,26 @@ export function useAuth() {
           console.warn('[AuthStore] Auto sign-in notice:', signInError);
         }
 
+        // Telemetry: track new user registration & initial login
+        const finalUser = signInData?.user || result.user;
+        tracker.track({
+          eventType: 'auth.register',
+          eventLabel: `新会员注册成功 [${name || email}]`,
+          userId: finalUser?.id,
+          userEmail: finalUser?.email,
+          userName: name || email,
+        });
+
+        if (finalUser) {
+          tracker.trackLogin({
+            id: finalUser.id,
+            email: finalUser.email,
+            name: name || email,
+          });
+        }
+
         return {
-          user: signInData?.user || result.user,
+          user: finalUser,
           session: signInData?.session || null,
           error: null,
         };
@@ -117,6 +136,16 @@ export function useAuth() {
         password,
       });
       if (error) throw error;
+
+      // Telemetry: track successful login
+      if (data.user) {
+        tracker.trackLogin({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || splitEmail(data.user.email || ''),
+        });
+      }
+
       return { user: data.user, error: null };
     } catch (err: any) {
       return { user: null, error: err };
@@ -126,13 +155,20 @@ export function useAuth() {
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured) return;
     try {
+      // Telemetry: track logout with session duration BEFORE clearing user state
+      tracker.trackLogout({
+        id: user?.id,
+        email: user?.email,
+        name: user?.user_metadata?.name || splitEmail(user?.email || ''),
+      });
+
       await supabase.auth.signOut();
       setUser(null);
       setSession(null);
     } catch (err) {
       console.error('SignOut error:', err);
     }
-  }, []);
+  }, [user]);
 
   return {
     user,
