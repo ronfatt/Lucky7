@@ -44,7 +44,7 @@ export function PersonalDNAView({ dna }: { dna: PersonalNumberDNA }) {
               <span className="text-[11px] text-slate-400">点击数字进入实验室深度检验</span>
             </div>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {dna.coreNumbers.map((d, i) => {
                 const el = getDigitElement(d);
                 const pol = getDigitPolarity(d);
@@ -54,7 +54,7 @@ export function PersonalDNAView({ dna }: { dna: PersonalNumberDNA }) {
                 return (
                   <div
                     key={d}
-                    className="flex-1 min-w-[130px] p-4 rounded-xl bg-obsidian-900/90 border border-gold-500/40 shadow-gold-glow flex flex-col justify-between hover:border-gold-400 transition-all group"
+                    className="p-3.5 sm:p-4 rounded-xl bg-obsidian-900/90 border border-gold-500/40 shadow-gold-glow flex flex-col justify-between hover:border-gold-400 transition-all group"
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-3xl font-mono font-bold text-gold-champagne group-hover:scale-110 transition-transform">

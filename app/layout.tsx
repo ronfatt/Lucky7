@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Sidebar } from '@/components/navigation/Sidebar';
-import { Header } from '@/components/navigation/Header';
+import { AppShell } from '@/components/navigation/AppShell';
 
 export const metadata: Metadata = {
   title: '紫微时空数字预测系统 (ZWTSP)',
@@ -26,14 +25,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className="antialiased flex min-h-screen bg-background text-foreground selection:bg-gold-500/30 selection:text-gold-200">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <Header />
-          <main className="flex-1 p-6 md:p-8 max-w-7xl w-full mx-auto">
-            {children}
-          </main>
-        </div>
+      <body className="antialiased min-h-screen bg-background text-foreground selection:bg-gold-500/30 selection:text-gold-200">
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );

@@ -33,31 +33,31 @@ export default function DestinyPage() {
       />
 
       {/* Top Banner */}
-      <div className="p-7 rounded-2xl glass-panel border border-gold-500/25 bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-850 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-4 sm:p-7 rounded-2xl glass-panel border border-gold-500/25 bg-gradient-to-r from-obsidian-950 via-obsidian-900 to-obsidian-850 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Badge variant="gold">Phase 2 · 本命数理中枢</Badge>
             <span className="text-xs text-slate-400 font-mono">ZW-TRADITIONAL-V1.0</span>
           </div>
-          <div className="flex items-center gap-3">
-            <h2 className="text-2xl font-serif font-bold text-slate-100">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 className="text-xl sm:text-2xl font-serif font-bold text-slate-100">
               我的命盘 · {profile.name} ({profile.gender === 'male' ? '乾造·男' : '坤造·女'})
             </h2>
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="px-3 py-1 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="px-2.5 py-1 rounded-xl bg-gold-500/10 hover:bg-gold-500/20 border border-gold-500/40 text-gold-300 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>修改资料</span>
             </button>
           </div>
-          <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+          <p className="text-xs text-slate-300 mt-1.5 max-w-2xl leading-relaxed">
             生辰：{profile.birthDate} {profile.birthTime ? profile.birthTime : '（时辰未知）'} · 出生地：{profile.birthPlace || '未填写'} · 时区：{profile.timezone}
           </p>
         </div>
 
         {/* Edit Profile Quick Trigger */}
-        <div className="p-3.5 rounded-xl bg-obsidian-950/80 border border-gold-500/30 flex items-center gap-3">
+        <div className="p-3 sm:p-3.5 rounded-xl bg-obsidian-950/80 border border-gold-500/30 flex items-center justify-between gap-3 self-stretch md:self-auto">
           <div>
             <span className="text-[11px] text-slate-400 block">当前命盘状态:</span>
             <span className="text-xs font-mono font-bold text-gold-300">
@@ -66,7 +66,7 @@ export default function DestinyPage() {
           </div>
           <Button
             onClick={() => setIsEditModalOpen(true)}
-            className="px-3.5 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs flex items-center gap-1"
+            className="px-3.5 py-1.5 rounded-lg bg-gold-500 hover:bg-gold-400 text-obsidian-950 font-bold text-xs flex items-center gap-1 shrink-0"
           >
             <Edit3 className="w-3.5 h-3.5" />
             修改命盘
