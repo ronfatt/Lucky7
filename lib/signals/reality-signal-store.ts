@@ -29,40 +29,8 @@ export const SOURCE_WEIGHTS: Record<string, number> = {
   ADDRESS_NUMBER: 60,
 };
 
-// In-memory cache for fast local persistence / SSR demo
-let inMemorySignals: RealitySignalRecord[] = [
-  {
-    id: 'sig-seed-1',
-    userId: 'default-user',
-    signalType: 'VEHICLE_PLATE',
-    rawValue: 'S 5729',
-    normalizedValue: 'S 5729',
-    normalizedDigits: [5, 7, 2, 9],
-    normalizedLetters: ['S'],
-    numericValue: '5729',
-    digitCount: 4,
-    observationTime: '15:27:00',
-    timezone: 'Asia/Shanghai',
-    locationLabel: '斗湖 (Tawau)',
-    direction: 'SW',
-    context: 'TRANSPORT',
-    notes: '路口目击白色丰田车牌',
-    resonanceScore: 89.2,
-    qualityScore: 92.0,
-    confidence: 'HIGH',
-    status: 'VERY STRONG',
-    dnaMatchScore: 88.0,
-    dailyMatchScore: 92.0,
-    directionMatchScore: 84.0,
-    timeMatchScore: 79.0,
-    patternScore: 91.0,
-    sourceWeight: 90,
-    effectiveWeights: { dna: 0.3, daily: 0.25, dir: 0.15, time: 0.1, pat: 0.1, src: 0.1 },
-    patternsDetected: [],
-    calculationVersion: 'SIGNAL-V1.0',
-    createdAt: '2026-09-13T15:27:00Z',
-  },
-];
+// In-memory cache for fast local persistence / user-scoped reality signals
+let inMemorySignals: RealitySignalRecord[] = [];
 
 export class RealitySignalStore {
   /**
@@ -158,11 +126,19 @@ export class RealitySignalStore {
   }
 
   /**
-   * Retrieves all signals (optionally filtered by date)
+   * Retrieves signals scoped by userId and optionally filtered by date
    */
-  public static getSignals(datePrefix?: string): RealitySignalRecord[] {
-    if (!datePrefix) return [...inMemorySignals];
-    return inMemorySignals.filter((s) => s.createdAt.startsWith(datePrefix));
+  public static getSignals(datePrefix?: string, userId?: string): RealitySignalRecord[] {
+    let list = [...inMemorySignals];
+    if (userId) {
+      list = list.filter((s) => s.userId === userId);
+    } else {
+      list = list.filter((s) => s.userId === 'global');
+    }
+    if (datePrefix) {
+      list = list.filter((s) => s.createdAt.startsWith(datePrefix));
+    }
+    return list;
   }
 
   /**

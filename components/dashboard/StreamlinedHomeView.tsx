@@ -147,9 +147,11 @@ export function StreamlinedHomeView() {
       activeNumbers,
       dailyDirection,
       realitySignals,
-      20
+      20,
+      fourPillars,
+      profile.birthDate
     );
-  }, [vectors, personalDNA, activeNumbers, dailyDirection, realitySignals]);
+  }, [vectors, personalDNA, activeNumbers, dailyDirection, realitySignals, fourPillars, profile.birthDate]);
 
   const motherCode = useMemo(() => {
     return MotherCodeEngine.extractMotherCode(candidates);

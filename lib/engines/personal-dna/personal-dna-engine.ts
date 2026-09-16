@@ -33,7 +33,7 @@ export class PersonalNumberDNAEngine {
     const tracesByDigit: Record<number, CalculationTrace> = {};
 
     for (let d = 0; d <= 9; d++) {
-      const trace = this.computeDigitRelevance(d, fourPillars, normalizedElements, chart);
+      const trace = this.computeDigitRelevance(d, fourPillars, normalizedElements, chart, profile.birthDate);
       scoresByDigit[d] = trace.finalScore;
       tracesByDigit[d] = trace;
     }
@@ -72,6 +72,14 @@ export class PersonalNumberDNAEngine {
     };
   }
 
+  private static readonly BRANCH_ELEMENT_MAP: Record<string, WuXingElement> = {
+    子: 'Water', 亥: 'Water',
+    寅: 'Wood', 卯: 'Wood',
+    巳: 'Fire', 午: 'Fire',
+    申: 'Metal', 酉: 'Metal',
+    辰: 'Earth', 戌: 'Earth', 丑: 'Earth', 未: 'Earth',
+  };
+
   /**
    * Evaluates the Personal Relevance Score and builds an auditable trace for digit d
    */
@@ -79,7 +87,8 @@ export class PersonalNumberDNAEngine {
     digit: number,
     fourPillars: FourPillarsData,
     elements: Record<WuXingElement, number>,
-    chart: ZiWeiChartData
+    chart: ZiWeiChartData,
+    birthDate?: string
   ): CalculationTrace {
     const el = getDigitElement(digit);
     const pol = getDigitPolarity(digit);
@@ -107,6 +116,59 @@ export class PersonalNumberDNAEngine {
       description: `${el}与日主${fourPillars.dayMasterElement}：${dmRel.label}`,
       points: dmPoints,
     });
+
+    // 2. Day Branch, Hour Branch & Month Branch sitting resonance (八字干支坐基与时辰引通)
+    if (fourPillars.dayBranch) {
+      const dayBranchEl = this.BRANCH_ELEMENT_MAP[fourPillars.dayBranch];
+      if (dayBranchEl && el === dayBranchEl) {
+        totalPoints += 12;
+        steps.push({
+          factor: `日支坐基生旺 (${fourPillars.dayBranch} · ${dayBranchEl})`,
+          description: `数字${digit}五行属${el}，与日元坐支${fourPillars.dayBranch}${dayBranchEl}同气比和`,
+          points: 12,
+        });
+      }
+    }
+
+    if (fourPillars.hourBranch) {
+      const hourBranchEl = this.BRANCH_ELEMENT_MAP[fourPillars.hourBranch];
+      if (hourBranchEl && el === hourBranchEl) {
+        totalPoints += 9;
+        steps.push({
+          factor: `时辰通根纳气 (${fourPillars.hourBranch} · ${hourBranchEl})`,
+          description: `数字${digit}五行属${el}，深得出生时辰${fourPillars.hourBranch}通根生发`,
+          points: 9,
+        });
+      }
+    }
+
+    if (fourPillars.monthBranch) {
+      const monthBranchEl = this.BRANCH_ELEMENT_MAP[fourPillars.monthBranch];
+      if (monthBranchEl && el === monthBranchEl) {
+        totalPoints += 7;
+        steps.push({
+          factor: `月令节令气候 (${fourPillars.monthBranch} · ${monthBranchEl})`,
+          description: `数字${digit}契合生月${fourPillars.monthBranch}当令五行`,
+          points: 7,
+        });
+      }
+    }
+
+    // 3. Birth Day Numerology Root (生日本命中元数理)
+    if (birthDate) {
+      const dayParts = birthDate.split('-');
+      const dayNum = parseInt(dayParts[2] || '1', 10);
+      const dayRoot = (dayNum % 9) || 9;
+      const dayLastDigit = dayNum % 10;
+      if (digit === dayRoot || digit === dayLastDigit) {
+        totalPoints += 8;
+        steps.push({
+          factor: `生辰日理中元 (${dayNum}日)`,
+          description: `数字${digit}与命主阳历生日本命中元数理共振`,
+          points: 8,
+        });
+      }
+    }
 
     // Element share in chart
     const elShare = elements[el] || 0;

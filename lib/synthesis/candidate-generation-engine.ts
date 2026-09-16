@@ -10,6 +10,7 @@ import type {
   PersonalNumberDNA,
   PredictionCandidate,
   RealitySignalRecord,
+  FourPillarsData,
 } from '../../types/zwtsp.ts';
 import { CandidateScoringEngine } from './candidate-scoring-engine.ts';
 
@@ -46,7 +47,9 @@ export class CandidateGenerationEngine {
     dailyActivatedDigits: DailyNumberActivation[],
     dailyDirection?: DailyDirectionResult,
     realitySignals: RealitySignalRecord[] = [],
-    limit: number = 50
+    limit: number = 50,
+    fourPillars?: FourPillarsData,
+    birthDate?: string
   ): PredictionCandidate[] {
     const top4 = vectors.slice(0, 4).map((v) => v.digit); // Primary Top 4
     const next2 = vectors.slice(4, 6).map((v) => v.digit); // Secondary Support
@@ -108,7 +111,9 @@ export class CandidateGenerationEngine {
         personalDNA,
         dailyActivatedDigits,
         dailyDirection,
-        realitySignals
+        realitySignals,
+        fourPillars,
+        birthDate
       );
 
       evaluated.push({

@@ -92,8 +92,8 @@ export class MemberDailyCalculator {
       activePalaces
     );
 
-    // 4. Reality Signals & Synthesis
-    const realitySignals = RealitySignalStore.getSignals();
+    // 4. Reality Signals & Synthesis (Scoped to member's own observations)
+    const realitySignals = profile.id ? RealitySignalStore.getSignals(dateStr, profile.id) : [];
     const vectors = DigitFeatureVectorEngine.computeVectors(
       personalDNA,
       activeNumbers,
@@ -108,7 +108,9 @@ export class MemberDailyCalculator {
       activeNumbers,
       dailyDirection,
       realitySignals,
-      20
+      20,
+      fourPillars,
+      birthProfile.birthDate
     );
 
     const motherCodeObj = MotherCodeEngine.extractMotherCode(candidates);

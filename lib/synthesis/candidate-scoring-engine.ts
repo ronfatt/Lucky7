@@ -11,9 +11,30 @@ import type {
   DigitFeatureVector,
   PersonalNumberDNA,
   RealitySignalRecord,
+  FourPillarsData,
+  WuXingElement,
 } from '../../types/zwtsp.ts';
 import { DigitExtractionEngine } from '../signals/digit-extraction-engine.ts';
 import { PlumBlossomEngine } from '../literature/plum-blossom-engine.ts';
+
+const BRANCH_ELEMENT_MAP: Record<string, WuXingElement> = {
+  子: 'Water', 亥: 'Water',
+  寅: 'Wood', 卯: 'Wood',
+  巳: 'Fire', 午: 'Fire',
+  申: 'Metal', 酉: 'Metal',
+  辰: 'Earth', 戌: 'Earth', 丑: 'Earth', 未: 'Earth',
+};
+
+const STEM_ELEMENT_MAP: Record<string, WuXingElement> = {
+  甲: 'Wood', 乙: 'Wood',
+  丙: 'Fire', 丁: 'Fire',
+  戊: 'Earth', 己: 'Earth',
+  庚: 'Metal', 辛: 'Metal',
+  壬: 'Water', 癸: 'Water',
+};
+
+const getDigitEl = (d: number): WuXingElement =>
+  (d === 1 || d === 6) ? 'Water' : (d === 2 || d === 7) ? 'Fire' : (d === 3 || d === 8) ? 'Wood' : (d === 4 || d === 9) ? 'Metal' : 'Earth';
 
 export interface CandidateEvaluationResult {
   score: number;
@@ -32,7 +53,9 @@ export class CandidateScoringEngine {
     personalDNA: PersonalNumberDNA,
     dailyActivatedDigits: DailyNumberActivation[],
     dailyDirection?: DailyDirectionResult,
-    realitySignals: RealitySignalRecord[] = []
+    realitySignals: RealitySignalRecord[] = [],
+    fourPillars?: FourPillarsData,
+    birthDate?: string
   ): CandidateEvaluationResult {
     const vectorMap = new Map<number, DigitFeatureVector>();
     for (const v of vectors) {
@@ -137,6 +160,31 @@ export class CandidateScoringEngine {
     if (digits[0] === digits[3]) patternScore += 6.0; // Flanking balance
     patternScore = Math.min(98.0, patternScore);
 
+    // 8. Four Pillars Personal Alignment (Fine-grained person-to-person differentiation)
+    let personalBonus = 0;
+    if (fourPillars) {
+      // Leading digit (体卦首位): Day Master affinity (体卦归元)
+      if (getDigitEl(digits[0]) === fourPillars.dayMasterElement) personalBonus += 6.0;
+      // Second digit (坐基生旺): Day Branch affinity
+      if (fourPillars.dayBranch && getDigitEl(digits[1]) === BRANCH_ELEMENT_MAP[fourPillars.dayBranch]) personalBonus += 4.5;
+      // Third digit (节令根基): Month Branch or Year Stem affinity
+      if (
+        (fourPillars.monthBranch && getDigitEl(digits[2]) === BRANCH_ELEMENT_MAP[fourPillars.monthBranch]) ||
+        (fourPillars.yearStem && getDigitEl(digits[2]) === STEM_ELEMENT_MAP[fourPillars.yearStem])
+      ) {
+        personalBonus += 3.5;
+      }
+      // Ending digit (用象纳气): Hour Branch affinity
+      if (fourPillars.hourBranch && getDigitEl(digits[3]) === BRANCH_ELEMENT_MAP[fourPillars.hourBranch]) personalBonus += 5.0;
+
+      // Birth Day numerology root
+      if (birthDate) {
+        const dayNum = parseInt(birthDate.split('-')[2] || '1', 10);
+        const dayRoot = (dayNum % 9) || 9;
+        if (digits.includes(dayRoot)) personalBonus += 3.0;
+      }
+    }
+
     // Dynamic re-normalization weights
     const wDigit = 0.25;
     const wCanon = 0.15;
@@ -148,7 +196,7 @@ export class CandidateScoringEngine {
 
     const wSum = wDigit + wCanon + wDna + wDaily + wReality + wDir + wPat;
 
-    const finalScore = Number(
+    const rawScore = Number(
       (
         (digitStrength * wDigit +
           canonScore * wCanon +
@@ -160,6 +208,8 @@ export class CandidateScoringEngine {
         wSum
       ).toFixed(1)
     );
+
+    const finalScore = Math.min(99.8, Number((rawScore + personalBonus).toFixed(1)));
 
     const breakdown: CandidateScoreBreakdown = {
       digitStrength,
