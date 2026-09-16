@@ -60,6 +60,8 @@ export function useAuth() {
         gender?: 'male' | 'female';
         birthDate?: string;
         birthTime?: string;
+        agreedToTerms?: boolean;
+        witnessPrivacy?: string;
       }
     ) => {
       if (!isSupabaseConfigured) {

@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   Cloud,
 } from 'lucide-react';
+import { ConsentTermsModal } from './ConsentTermsModal';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -32,6 +33,8 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -66,12 +69,20 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
     try {
       if (mode === 'signup') {
+        if (!agreedToTerms) {
+          setErrorMessage('请先勾选同意《实验参与守则与同意条款》后方可完成注册');
+          setIsLoading(false);
+          return;
+        }
         if (password.length < 6) {
           setErrorMessage('密码长度至少需要 6 个字符');
           setIsLoading(false);
           return;
         }
-        const { user, session, error } = await signUp(email, password, name);
+        const { user, session, error } = await signUp(email, password, name, {
+          agreedToTerms: true,
+          witnessPrivacy: 'nickname',
+        });
         if (error) {
           setErrorMessage(formatAuthError(error));
         } else if (session) {
@@ -235,6 +246,35 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
           </div>
 
+          {/* Terms Consent Checkbox for Signup */}
+          {mode === 'signup' && (
+            <div className="p-2.5 rounded-xl bg-obsidian-950 border border-gold-500/25">
+              <label className="flex items-start gap-2 cursor-pointer select-none text-[11px] text-slate-300 leading-relaxed">
+                <input
+                  type="checkbox"
+                  required
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 w-3.5 h-3.5 rounded border-slate-700 bg-obsidian-900 text-gold-500 focus:ring-gold-500/40 shrink-0 accent-amber-500"
+                />
+                <span>
+                  本人自愿参与并已阅读同意
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTermsModalOpen(true);
+                    }}
+                    className="text-gold-300 font-bold underline hover:text-gold-200 mx-1 inline"
+                  >
+                    《实验参与守则与同意条款》
+                  </button>
+                  （含 13% 愿心公益承诺与拒绝赌博约定）。
+                </span>
+              </label>
+            </div>
+          )}
+
           <Button
             type="submit"
             disabled={isLoading}
@@ -245,7 +285,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             ) : mode === 'signin' ? (
               <span>安全登录 · 载入命盘</span>
             ) : (
-              <span>完成注册 · 开启云端同步</span>
+              <span>同意守则并注册会员</span>
             )}
           </Button>
         </form>
@@ -259,6 +299,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           <span>数据加密传输 · 保护生辰隐私</span>
         </div>
       </Card>
+
+      {/* Terms Modal */}
+      <ConsentTermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onAgree={() => {
+          setAgreedToTerms(true);
+          setIsTermsModalOpen(false);
+        }}
+      />
     </div>
   </div>
   );

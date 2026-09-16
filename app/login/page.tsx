@@ -28,6 +28,7 @@ import {
   ArrowRight,
   HeartHandshake,
 } from 'lucide-react';
+import { ConsentTermsModal } from '@/components/auth/ConsentTermsModal';
 
 const CHINESE_HOURS = [
   { branch: '子', label: '子时 (23:00 - 00:59)', time: '23:30:00' },
@@ -57,6 +58,9 @@ export default function LoginPage() {
   const [birthDate, setBirthDate] = useState('1990-05-18');
   const [birthTime, setBirthTime] = useState('09:30:00');
   const [isUnknownHour, setIsUnknownHour] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [useNicknameWitness, setUseNicknameWitness] = useState(true);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,6 +116,12 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signup') {
+        if (!agreedToTerms) {
+          setErrorMessage('请先阅读并勾选同意《实验参与守则与同意条款》后方可完成注册');
+          setIsSubmitting(false);
+          return;
+        }
+
         if (cleanPassword.length < 6) {
           setErrorMessage('密码长度至少需要 6 位字符');
           setIsSubmitting(false);
@@ -126,6 +136,8 @@ export default function LoginPage() {
             gender,
             birthDate,
             birthTime: isUnknownHour ? '' : birthTime,
+            agreedToTerms: true,
+            witnessPrivacy: useNicknameWitness ? 'nickname' : 'real',
           }
         );
         if (error) {
@@ -356,6 +368,45 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {/* Terms & Guidelines Consent for Signup */}
+          {mode === 'signup' && (
+            <div className="space-y-2.5 p-3 rounded-xl bg-obsidian-950/90 border border-gold-500/30">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  required
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-slate-700 bg-obsidian-900 text-gold-500 focus:ring-gold-500/40 shrink-0 accent-amber-500"
+                />
+                <span className="text-[11px] text-slate-300 leading-relaxed">
+                  本人自愿参与并确认已阅读、理解并同意遵守
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTermsModalOpen(true);
+                    }}
+                    className="text-gold-300 font-serif font-bold underline hover:text-gold-200 mx-1 inline"
+                  >
+                    《实验参与守则与同意条款》
+                  </button>
+                  （含理性参与、拒绝赌博与 All-In、中奖后 13% 愿心公益承诺、结果不保证等全部五大条款）。
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer select-none pl-6 text-[10px] text-slate-400">
+                <input
+                  type="checkbox"
+                  checked={useNicknameWitness}
+                  onChange={(e) => setUseNicknameWitness(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded border-slate-700 bg-obsidian-900 text-gold-500 focus:ring-gold-500/40 shrink-0 accent-amber-500"
+                />
+                <span>公开见证时隐藏真实姓名，仅使用昵称/化名 (默认勾选保护隐私)</span>
+              </label>
+            </div>
+          )}
+
           {/* Submit Button */}
           <Button
             type="submit"
@@ -372,7 +423,7 @@ export default function LoginPage() {
             ) : (
               <>
                 <UserPlus className="w-4 h-4" />
-                <span>注册会员 · 生成专属本命盘</span>
+                <span>同意条款并注册会员 · 生成本命盘</span>
               </>
             )}
           </Button>
@@ -390,6 +441,16 @@ export default function LoginPage() {
           </div>
         </div>
       </Card>
+
+      {/* Full Terms Modal */}
+      <ConsentTermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+        onAgree={() => {
+          setAgreedToTerms(true);
+          setIsTermsModalOpen(false);
+        }}
+      />
     </div>
   );
 }

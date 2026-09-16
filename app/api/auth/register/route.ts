@@ -19,6 +19,8 @@ export async function POST(request: Request) {
       birthTime = '09:30:00',
       birthPlace = '马来西亚吉隆坡',
       timezone = 'Asia/Kuala_Lumpur',
+      agreedToTerms = true,
+      witnessPrivacy = 'nickname',
     } = body;
 
     if (!email || !password) {
@@ -37,6 +39,7 @@ export async function POST(request: Request) {
 
     const cleanEmail = email.trim().toLowerCase();
     const displayName = (name || cleanEmail.split('@')[0] || '命主').trim();
+    const agreedAtIso = new Date().toISOString();
 
     // 1. Create user in Supabase Auth with auto-confirmed email (zero SMTP rate limits)
     const { data: authData, error: authError } =
@@ -49,6 +52,9 @@ export async function POST(request: Request) {
           gender,
           birthDate,
           birthTime,
+          agreedToTerms: Boolean(agreedToTerms),
+          agreedTermsAt: agreedAtIso,
+          witnessPrivacy,
         },
       });
 
@@ -86,7 +92,12 @@ export async function POST(request: Request) {
             birth_place: birthPlace,
             timezone,
             calendar_type: 'gregorian',
-            updated_at: new Date().toISOString(),
+            preferences: {
+              agreed_terms: Boolean(agreedToTerms),
+              agreed_terms_at: agreedAtIso,
+              witness_privacy: witnessPrivacy,
+            },
+            updated_at: agreedAtIso,
           },
           { onConflict: 'id' }
         );
