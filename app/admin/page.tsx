@@ -23,6 +23,7 @@ import {
   ArrowLeft,
   Lock,
   Sparkles,
+  Trophy,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,6 +33,7 @@ import { AdminDailyPredictionsView } from '@/components/admin/AdminDailyPredicti
 import { AdminUsersView } from '@/components/admin/AdminUsersView';
 import { AdminActivityLogsView } from '@/components/admin/AdminActivityLogsView';
 import { DatabaseManagerView } from '@/components/admin/DatabaseManagerView';
+import { AdminLotteryHitsSummaryCard } from '@/components/admin/AdminLotteryHitsSummaryCard';
 
 export default function AdminPage() {
   const [isAdminAuth, setIsAdminAuth] = useState<boolean | null>(null);
@@ -272,11 +274,18 @@ export default function AdminPage() {
         {/* Tab Panels */}
         <div>
           {activeTab === 'overview' && (
-            <AdminOverviewDashboard
-              data={overviewData}
-              loading={overviewLoading}
-              onRefresh={fetchOverview}
-            />
+            <div className="space-y-6">
+              {/* Official Lottery Hits Quick Summary Bulletin */}
+              <AdminLotteryHitsSummaryCard
+                onNavigateToPredictions={() => setActiveTab('predictions')}
+              />
+
+              <AdminOverviewDashboard
+                data={overviewData}
+                loading={overviewLoading}
+                onRefresh={fetchOverview}
+              />
+            </div>
           )}
 
           {activeTab === 'predictions' && (
