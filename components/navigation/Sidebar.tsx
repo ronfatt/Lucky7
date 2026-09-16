@@ -40,7 +40,6 @@ export const NAV_ITEMS: NavItem[] = [
   { name: '推演记录', nameEn: 'History', href: '/history', icon: History, phase: 1 },
   { name: '规则中枢', nameEn: 'Rules Engine', href: '/rules', icon: BookOpen, phase: 1 },
   { name: '易理文库', nameEn: 'Canon Library', href: '/literature', icon: BookMarked, phase: 2 },
-  { name: '管理中台', nameEn: 'Admin Center', href: '/admin', icon: Sliders, phase: 8 },
   { name: '自律与愿心', nameEn: 'Settings & Pledge', href: '/settings', icon: ShieldCheck, phase: 1 },
 ];
 

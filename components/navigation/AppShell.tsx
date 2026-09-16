@@ -38,20 +38,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, isAuthenticated]);
 
-  // Mandatory Auth Barrier: If not authenticated and not on /login, redirect immediately
+  const isAuthOrAdmin = pathname === '/login' || pathname.startsWith('/admin');
+
+  // Mandatory Auth Barrier: If not authenticated and not on /login or /admin, redirect immediately
   useEffect(() => {
-    if (!loading && !isAuthenticated && pathname !== '/login') {
+    if (!loading && !isAuthenticated && !isAuthOrAdmin) {
       router.replace('/login');
     }
-  }, [loading, isAuthenticated, pathname, router]);
+  }, [loading, isAuthenticated, isAuthOrAdmin, router]);
 
-  // If on dedicated login/register portal, render clean standalone view
-  if (pathname === '/login') {
+  // Dedicated portal views (Login and Admin Dashboard have standalone layouts)
+  if (isAuthOrAdmin) {
     return <>{children}</>;
   }
 
   // Session verification loading state
-  if (loading && pathname !== '/login') {
+  if (loading && !isAuthOrAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#070A12] text-gold-300">
         <div className="flex flex-col items-center gap-3">
