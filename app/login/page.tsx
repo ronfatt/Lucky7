@@ -103,7 +103,16 @@ export default function LoginPage() {
           return;
         }
 
-        const { user: newUser, session, error } = await signUp(email, password, name || '命主');
+        const { user: newUser, session, error } = await signUp(
+          email,
+          password,
+          name || '命主',
+          {
+            gender,
+            birthDate,
+            birthTime: isUnknownHour ? '' : birthTime,
+          }
+        );
         if (error) {
           setErrorMessage(formatAuthError(error));
         } else {

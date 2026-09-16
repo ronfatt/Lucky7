@@ -51,23 +51,56 @@ export function useAuth() {
   }, []);
 
   const signUp = useCallback(
-    async (email: string, password: string, name?: string) => {
+    async (
+      email: string,
+      password: string,
+      name?: string,
+      extraProfile?: {
+        gender?: 'male' | 'female';
+        birthDate?: string;
+        birthTime?: string;
+      }
+    ) => {
       if (!isSupabaseConfigured) {
-        return { user: null, error: { message: 'Supabase 未正确配置' } };
+        return { user: null, session: null, error: { message: 'Supabase 未正确配置' } };
       }
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: name || splitEmail(email),
-            },
-          },
+        // 1. Register through server API (bypasses Supabase SMTP rate limit & auto-confirms email)
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            name,
+            ...extraProfile,
+          }),
         });
-        if (error) throw error;
-        return { user: data.user, session: data.session, error: null };
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || '注册失败，请稍后重试');
+        }
+
+        // 2. Immediately sign in to establish client session & tokens
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+        if (signInError) {
+          console.warn('[AuthStore] Auto sign-in notice:', signInError);
+        }
+
+        return {
+          user: signInData?.user || result.user,
+          session: signInData?.session || null,
+          error: null,
+        };
       } catch (err: any) {
+        console.error('[AuthStore] Sign up exception:', err);
         return { user: null, session: null, error: err };
       }
     },
