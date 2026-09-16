@@ -66,9 +66,9 @@ export function useAuth() {
           },
         });
         if (error) throw error;
-        return { user: data.user, error: null };
+        return { user: data.user, session: data.session, error: null };
       } catch (err: any) {
-        return { user: null, error: err };
+        return { user: null, session: null, error: err };
       }
     },
     []

@@ -44,6 +44,26 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setSuccessMessage(null);
     setIsLoading(true);
 
+    const formatAuthError = (err: any): string => {
+      const msg = err?.message || String(err);
+      if (msg.includes('Email not confirmed')) {
+        return '邮箱尚未通过验证：请前往收件箱或垃圾箱查收确认邮件并点击激活链接；或者项目管理员可在 Supabase 控制台（Authentication -> Providers -> Email）关闭【Confirm email】以实现免验证直接登录。';
+      }
+      if (msg.includes('Invalid login credentials')) {
+        return '登录失败：账号邮箱或密码不匹配，请重新核对。';
+      }
+      if (msg.includes('User already registered')) {
+        return '该邮箱已注册：请直接点击上方【立即登录】按钮。';
+      }
+      if (msg.includes('rate limit')) {
+        return '请求过于频繁，请稍等 1-2 分钟后再试。';
+      }
+      if (msg.includes('is invalid')) {
+        return '邮箱格式无效：请输入真实的常用邮箱（如 Gmail、QQ、163 等）。';
+      }
+      return msg;
+    };
+
     try {
       if (mode === 'signup') {
         if (password.length < 6) {
@@ -51,19 +71,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
           setIsLoading(false);
           return;
         }
-        const { user, error } = await signUp(email, password, name);
+        const { user, session, error } = await signUp(email, password, name);
         if (error) {
-          setErrorMessage(error.message || '注册失败，请检查邮箱格式或网络状态');
-        } else {
-          setSuccessMessage('注册成功！已为您开启云端会员命盘同步。');
+          setErrorMessage(formatAuthError(error));
+        } else if (session) {
+          setSuccessMessage('注册成功！已为您自动登录并开启命盘云同步。');
           setTimeout(() => {
             onClose();
           }, 1500);
+        } else {
+          setSuccessMessage('注册成功！若您的项目开启了邮箱验证，请查收邮件激活；若已关闭验证，请切换至【立即登录】。');
         }
       } else {
         const { user, error } = await signIn(email, password);
         if (error) {
-          setErrorMessage(error.message || '登录失败，请检查邮箱与密码是否正确');
+          setErrorMessage(formatAuthError(error));
         } else {
           setSuccessMessage('登录成功！已同步您的专属紫微命盘。');
           setTimeout(() => {
@@ -72,7 +94,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || '系统繁忙，请稍后再试');
+      setErrorMessage(formatAuthError(err));
     } finally {
       setIsLoading(false);
     }
