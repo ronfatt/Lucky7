@@ -101,11 +101,12 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <Card className="w-full max-w-md bg-gradient-to-br from-[#101626] via-[#0C101A] to-[#070A12] border-gold-500/40 shadow-2xl p-6 relative overflow-hidden">
-        {/* Glow decoration */}
-        <div className="absolute -top-16 -right-16 w-48 h-48 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md p-4 sm:p-6 flex min-h-full items-center justify-center animate-in fade-in duration-200">
+      <div className="w-full max-w-md my-auto relative">
+        <Card className="w-full bg-gradient-to-br from-[#101626] via-[#0C101A] to-[#070A12] border-gold-500/40 shadow-2xl p-5 sm:p-6 relative overflow-hidden rounded-2xl">
+          {/* Glow decoration */}
+          <div className="absolute -top-16 -right-16 w-48 h-48 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Close button */}
         <button
@@ -259,5 +260,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         </div>
       </Card>
     </div>
+  </div>
   );
 }
