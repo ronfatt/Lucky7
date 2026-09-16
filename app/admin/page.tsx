@@ -22,11 +22,13 @@ import {
   LogOut,
   ArrowLeft,
   Lock,
+  Sparkles,
 } from 'lucide-react';
 import Link from 'next/link';
 
 import { AdminLoginGate } from '@/components/admin/AdminLoginGate';
 import { AdminOverviewDashboard } from '@/components/admin/AdminOverviewDashboard';
+import { AdminDailyPredictionsView } from '@/components/admin/AdminDailyPredictionsView';
 import { AdminUsersView } from '@/components/admin/AdminUsersView';
 import { AdminActivityLogsView } from '@/components/admin/AdminActivityLogsView';
 import { DatabaseManagerView } from '@/components/admin/DatabaseManagerView';
@@ -34,7 +36,7 @@ import { DatabaseManagerView } from '@/components/admin/DatabaseManagerView';
 export default function AdminPage() {
   const [isAdminAuth, setIsAdminAuth] = useState<boolean | null>(null);
   const [adminUser, setAdminUser] = useState<string>('admin');
-  const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'logs' | 'database'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'predictions' | 'users' | 'logs' | 'database'>('overview');
 
   // Overview Data State
   const [overviewData, setOverviewData] = useState<any>(null);
@@ -204,7 +206,7 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
-            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
               activeTab === 'overview'
                 ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
                 : 'text-slate-400 hover:text-white'
@@ -212,6 +214,19 @@ export default function AdminPage() {
           >
             <BarChart3 className="w-4 h-4" />
             <span>全局数据看板</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('predictions')}
+            className={`flex-1 min-w-[145px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+              activeTab === 'predictions'
+                ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-amber-400" />
+            <span>会员每日推演档案</span>
           </button>
 
           <button
@@ -230,7 +245,7 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={() => setActiveTab('logs')}
-            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
               activeTab === 'logs'
                 ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
                 : 'text-slate-400 hover:text-white'
@@ -243,7 +258,7 @@ export default function AdminPage() {
           <button
             type="button"
             onClick={() => setActiveTab('database')}
-            className={`flex-1 min-w-[130px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
+            className={`flex-1 min-w-[125px] py-2.5 px-3 rounded-xl text-xs font-bold font-serif transition flex items-center justify-center gap-2 ${
               activeTab === 'database'
                 ? 'bg-gold-500 text-obsidian-950 shadow-md shadow-gold-500/20'
                 : 'text-slate-400 hover:text-white'
@@ -262,6 +277,10 @@ export default function AdminPage() {
               loading={overviewLoading}
               onRefresh={fetchOverview}
             />
+          )}
+
+          {activeTab === 'predictions' && (
+            <AdminDailyPredictionsView />
           )}
 
           {activeTab === 'users' && (

@@ -24,6 +24,7 @@ import {
   History,
   ShieldCheck,
   Zap,
+  Sparkles,
 } from 'lucide-react';
 
 interface UserDetailDrawerProps {
@@ -35,7 +36,28 @@ interface UserDetailDrawerProps {
 export function UserDetailDrawer({ userId, userEmail, onClose }: UserDetailDrawerProps) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'timeline' | 'saves' | 'ledger'>('timeline');
+  const [activeTab, setActiveTab] = useState<'timeline' | 'saves' | 'predictions'>('timeline');
+  const [predictionsList, setPredictionsList] = useState<any[]>([]);
+  const [predictionsLoading, setPredictionsLoading] = useState(false);
+
+  useEffect(() => {
+    setPredictionsList([]);
+  }, [userId]);
+
+  useEffect(() => {
+    if (activeTab === 'predictions' && userId && predictionsList.length === 0) {
+      setPredictionsLoading(true);
+      fetch(`/api/admin/analytics/member-predictions?userId=${userId}&days=14`)
+        .then((res) => res.json())
+        .then((res) => {
+          if (res.success && res.data?.predictions) {
+            setPredictionsList(res.data.predictions);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setPredictionsLoading(false));
+    }
+  }, [activeTab, userId, predictionsList.length]);
 
   useEffect(() => {
     if (!userId && !userEmail) return;
@@ -181,6 +203,18 @@ export function UserDetailDrawer({ userId, userEmail, onClose }: UserDetailDrawe
                   <Bookmark className="w-3.5 h-3.5" />
                   <span>收藏号码 ({data?.savedPredictions?.length || 0})</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('predictions')}
+                  className={`pb-2 transition flex items-center gap-1.5 ${
+                    activeTab === 'predictions'
+                      ? 'border-b-2 border-gold-500 text-gold-300 font-bold'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>每日推演档案 (近14天)</span>
+                </button>
               </div>
 
               {/* Tab 1: Chronological Activity Timeline */}
@@ -265,6 +299,76 @@ export function UserDetailDrawer({ userId, userEmail, onClose }: UserDetailDrawe
                         <Badge variant="gold" className="text-xs">
                           {s.score} 分
                         </Badge>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Tab 3: Member Daily Predictions */}
+              {activeTab === 'predictions' && (
+                <div className="space-y-3">
+                  {predictionsLoading ? (
+                    <div className="py-12 text-center text-slate-400 font-serif space-y-2">
+                      <div className="w-6 h-6 rounded-full border-2 border-gold-500 border-t-transparent animate-spin mx-auto" />
+                      <p className="text-xs">正在依据该会员八字推演近 14 天玄学时空母码...</p>
+                    </div>
+                  ) : predictionsList.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500 text-xs">
+                      暂无该会员推演数据。
+                    </div>
+                  ) : (
+                    predictionsList.map((p: any) => (
+                      <div
+                        key={p.date}
+                        className="p-3.5 rounded-xl bg-obsidian-950 border border-gold-500/20 space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-white font-mono">{p.date}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-gold-400 font-serif">
+                              {p.dayStemBranch}
+                            </span>
+                            {p.isSaved && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/60 border border-purple-800/60 text-purple-300">
+                                已收藏
+                              </span>
+                            )}
+                          </div>
+                          <Badge variant={p.score >= 85 ? 'gold' : 'default'} className="text-[10px]">
+                            {p.score} 分 · {p.confidence}
+                          </Badge>
+                        </div>
+
+                        <div className="flex items-baseline justify-between bg-obsidian-900/60 p-2.5 rounded-lg border border-slate-800">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-serif">核心母码</span>
+                            <span className="text-xl font-bold font-mono text-gold-300 tracking-wider">
+                              {p.motherCode}
+                            </span>
+                          </div>
+                          <div className="text-right text-[11px] text-slate-300 space-y-0.5">
+                            <div>吉时: <span className="text-gold-300 font-mono">{p.auspiciousHour}</span></div>
+                            <div>吉位: <span className="text-emerald-400">{p.wealthDirection}</span></div>
+                          </div>
+                        </div>
+
+                        {/* 12 Variations */}
+                        {p.variations && p.variations.length > 0 && (
+                          <div>
+                            <span className="text-[10px] text-slate-500 block mb-1">12 组同频变体:</span>
+                            <div className="grid grid-cols-4 gap-1.5 font-mono text-xs text-center">
+                              {p.variations.map((num: string, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="p-1 rounded bg-slate-900/80 border border-slate-800/80 text-slate-300 text-[11px]"
+                                >
+                                  {num}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))
                   )}

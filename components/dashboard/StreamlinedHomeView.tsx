@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Sparkles,
@@ -177,6 +177,18 @@ export function StreamlinedHomeView() {
       windfallAnalysis.avoidHour
     );
   }, [dailyDirection, personalDirections, windfallAnalysis.auspiciousHour, windfallAnalysis.avoidHour]);
+
+  // Auto-track telemetry log when prediction is calculated & viewed
+  useEffect(() => {
+    if (motherCode?.motherCode) {
+      tracker.trackPrediction(motherCode.motherCode, motherCode.score, {
+        type: 'daily_view',
+        date: selectedDate,
+        dayStemBranch: dailySig?.dayStemBranch,
+        auspiciousHour: windfallAnalysis?.auspiciousHour,
+      });
+    }
+  }, [motherCode?.motherCode, selectedDate, dailySig?.dayStemBranch, windfallAnalysis?.auspiciousHour]);
 
   // Actions
   const handleCopy = () => {
