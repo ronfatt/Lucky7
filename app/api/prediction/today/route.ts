@@ -13,10 +13,11 @@ import { MotherCodeEngine } from '@/lib/synthesis/mother-code-engine';
 import { VariationCodeEngine } from '@/lib/synthesis/variation-code-engine';
 import { PredictionDataQualityEngine } from '@/lib/synthesis/prediction-quality-engine';
 import { ModelConsistencyEngine } from '@/lib/synthesis/model-consistency-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const dateStr = searchParams.get('date') || '2026-09-13';
+  const dateStr = searchParams.get('date') || getRealtimeDate();
 
   // Default demonstration profile
   const profile: BirthProfile = {

@@ -4,22 +4,22 @@
 // Computes or retrieves deterministic 4-digit mother code & predictions for any member & date
 // ==========================================================
 
-import type { BirthProfile } from '@/types/zwtsp';
-import { FourPillarsEngine } from '@/lib/engines/four-pillars/four-pillars-engine';
-import { ZiWeiEngine } from '@/lib/engines/ziwei/ziwei-engine';
-import { PersonalNumberDNAEngine } from '@/lib/engines/personal-dna/personal-dna-engine';
-import { DailyEngine } from '@/lib/engines/daily/daily-engine';
-import { PersonalDirectionEngine } from '@/lib/directions/personal-direction-engine';
-import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
-import { RealitySignalStore } from '@/lib/signals/reality-signal-store';
-import { DigitFeatureVectorEngine } from '@/lib/synthesis/digit-feature-vector-engine';
-import { CandidateGenerationEngine } from '@/lib/synthesis/candidate-generation-engine';
-import { MotherCodeEngine } from '@/lib/synthesis/mother-code-engine';
-import { VariationCodeEngine } from '@/lib/synthesis/variation-code-engine';
-import { WindfallWealthEngine } from '@/lib/engines/daily/windfall-wealth-engine';
-import { LuckyClothingEngine } from '@/lib/engines/daily/lucky-clothing-engine';
-import { WealthDirectionNavigator } from '@/lib/directions/wealth-direction-navigator';
-import { LotteryHitEngine, type DailyDrawHitReport } from '@/lib/lottery/lottery-hit-engine';
+import type { BirthProfile } from '../../types/zwtsp.ts';
+import { FourPillarsEngine } from '../engines/four-pillars/four-pillars-engine.ts';
+import { ZiWeiEngine } from '../engines/ziwei/ziwei-engine.ts';
+import { PersonalNumberDNAEngine } from '../engines/personal-dna/personal-dna-engine.ts';
+import { DailyEngine } from '../engines/daily/daily-engine.ts';
+import { PersonalDirectionEngine } from '../directions/personal-direction-engine.ts';
+import { DailyDirectionEngine } from '../directions/daily-direction-engine.ts';
+import { RealitySignalStore } from '../signals/reality-signal-store.ts';
+import { DigitFeatureVectorEngine } from '../synthesis/digit-feature-vector-engine.ts';
+import { CandidateGenerationEngine } from '../synthesis/candidate-generation-engine.ts';
+import { MotherCodeEngine } from '../synthesis/mother-code-engine.ts';
+import { VariationCodeEngine } from '../synthesis/variation-code-engine.ts';
+import { WindfallWealthEngine } from '../engines/daily/windfall-wealth-engine.ts';
+import { LuckyClothingEngine } from '../engines/daily/lucky-clothing-engine.ts';
+import { WealthDirectionNavigator } from '../directions/wealth-direction-navigator.ts';
+import { LotteryHitEngine, type DailyDrawHitReport } from '../lottery/lottery-hit-engine.ts';
 
 export interface MemberDailyPrediction {
   userId: string;

@@ -9,12 +9,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Clock, Trophy, AlertCircle, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 interface DrawCountdownBannerProps {
   dateStr?: string;
 }
 
-export function DrawCountdownBanner({ dateStr = '2026-09-13' }: DrawCountdownBannerProps) {
+export function DrawCountdownBanner({ dateStr }: DrawCountdownBannerProps) {
+  const activeDate = dateStr || getRealtimeDate();
   const [timeLeft, setTimeLeft] = useState<{
     hours: number;
     minutes: number;
@@ -28,7 +30,7 @@ export function DrawCountdownBanner({ dateStr = '2026-09-13' }: DrawCountdownBan
   });
 
   // Determine if date is draw day (Wed=3, Sat=6, Sun=0, Tue=2 Special)
-  const drawDate = new Date(dateStr);
+  const drawDate = new Date(activeDate);
   const dayOfWeek = drawDate.getDay();
   const isRegularDraw = dayOfWeek === 0 || dayOfWeek === 3 || dayOfWeek === 6;
   const isSpecialDraw = dayOfWeek === 2;

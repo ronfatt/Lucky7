@@ -34,16 +34,16 @@ export class DigitFeatureVectorEngine {
     // Check if Reality Signals are available
     const hasReality = realitySignals.length > 0;
 
-    // Default V1 weights:
-    // DNA: 0.20, Daily: 0.20, Reality: 0.20, Direction: 0.10, Freq: 0.10, Pattern: 0.10, Element: 0.10
+    // Dynamic V2 weights:
+    // DNA: 0.15, Daily: 0.30, Reality: 0.20, Direction: 0.15, Freq: 0.10, Pattern: 0.10, Element: 0.20
     const rawWeights: Record<string, number> = {
-      dna: 0.20,
-      daily: 0.20,
+      dna: 0.15,
+      daily: 0.30,
       reality: hasReality ? 0.20 : 0.0,
-      direction: 0.10,
+      direction: 0.15,
       frequency: 0.10,
       pattern: 0.10,
-      element: 0.10,
+      element: 0.20,
     };
 
     // Re-normalize available weights so they sum to 1.0
@@ -87,10 +87,12 @@ export class DigitFeatureVectorEngine {
       const freqCount = frequencies[d] || 0;
       const frequencyScore = Number((40 + (freqCount / maxFreq) * 55).toFixed(1));
 
-      // 6. Pattern Score (Core digits & He Tu pairings)
+      // 6. Pattern Score (Core digits & Daily time-space pairings)
       let patternScore = 65.0;
-      if (personalDNA.coreNumbers?.includes(d)) patternScore += 15.0;
-      if (d === 7 || d === 8) patternScore += 8.0; // Traditional auspicious structural resonance
+      if (personalDNA.coreNumbers?.includes(d)) patternScore += 8.0;
+      const topActivatedDigits = dailyActivatedDigits.slice(0, 4).map((a) => a.digit);
+      if (topActivatedDigits.includes(d)) patternScore += 12.0; // Daily dynamic resonance
+      if (d === 7 || d === 8) patternScore += 6.0; // Traditional auspicious structural resonance
       patternScore = Math.min(98.0, patternScore);
 
       // 7. Element Score (Enhanced with He Tu classical generating pairs: 1-6水, 2-7火, 3-8木, 4-9金, 5-0土)

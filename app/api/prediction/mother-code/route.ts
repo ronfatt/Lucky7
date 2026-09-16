@@ -11,10 +11,11 @@ import { DigitFeatureVectorEngine } from '@/lib/synthesis/digit-feature-vector-e
 import { CandidateGenerationEngine } from '@/lib/synthesis/candidate-generation-engine';
 import { MotherCodeEngine } from '@/lib/synthesis/mother-code-engine';
 import { VariationCodeEngine } from '@/lib/synthesis/variation-code-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const dateStr = searchParams.get('date') || '2026-09-13';
+  const dateStr = searchParams.get('date') || getRealtimeDate();
 
   const profile: BirthProfile = {
     name: '李知命 (示范档案)',

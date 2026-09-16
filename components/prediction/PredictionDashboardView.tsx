@@ -78,6 +78,7 @@ import {
   Check,
 } from 'lucide-react';
 import Link from 'next/link';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 interface PredictionDashboardViewProps {
   profile: BirthProfile;
@@ -86,12 +87,13 @@ interface PredictionDashboardViewProps {
 
 export function PredictionDashboardView({
   profile: propProfile,
-  initialDate = '2026-09-13',
+  initialDate,
 }: PredictionDashboardViewProps) {
   const { profile: storedProfile, updateProfile } = useUserProfile();
   const profile = storedProfile || propProfile;
 
-  const [selectedDate, setSelectedDate] = useState<string>(initialDate);
+  const activeInitial = initialDate || getRealtimeDate(profile?.timezone);
+  const [selectedDate, setSelectedDate] = useState<string>(activeInitial);
   const [topLimit, setTopLimit] = useState<number>(10);
   const [selectedCandidate, setSelectedCandidate] = useState<PredictionCandidate | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);

@@ -4,8 +4,8 @@
 // Automatically cross-references member mother codes & variations against Malaysian & Singapore draws
 // ==========================================================
 
-import { MalaysiaLotteryProvider, MALAYSIAN_OPERATORS } from './malaysia-provider';
-import type { Malaysian4DDrawRecord, MalaysianOperator, MalaysianPrizeTier } from '@/types/zwtsp';
+import { MalaysiaLotteryProvider, MALAYSIAN_OPERATORS } from './malaysia-provider.ts';
+import type { Malaysian4DDrawRecord, MalaysianOperator, MalaysianPrizeTier } from '../../types/zwtsp.ts';
 
 export interface LotteryHitItem {
   operator: MalaysianOperator;

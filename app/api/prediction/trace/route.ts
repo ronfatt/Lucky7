@@ -9,11 +9,12 @@ import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
 import { RealitySignalStore } from '@/lib/signals/reality-signal-store';
 import { DigitFeatureVectorEngine } from '@/lib/synthesis/digit-feature-vector-engine';
 import { CandidateScoringEngine } from '@/lib/synthesis/candidate-scoring-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const numberStr = searchParams.get('number') || '5729';
-  const dateStr = searchParams.get('date') || '2026-09-13';
+  const dateStr = searchParams.get('date') || getRealtimeDate();
 
   if (!/^\d{4}$/.test(numberStr)) {
     return NextResponse.json(

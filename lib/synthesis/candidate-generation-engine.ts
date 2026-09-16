@@ -89,15 +89,27 @@ export class CandidateGenerationEngine {
       }
     }
 
-    // 3. Secondary substituted candidates
-    for (const secDigit of next2) {
-      const subbed = [top4[0], top4[1], top4[2], secDigit];
-      const perms = getPermutations(subbed);
-      for (const p of perms.slice(0, 4)) {
-        const numStr = p.join('');
-        if (!seenCombos.has(numStr)) {
-          seenCombos.add(numStr);
-          candidatePool.push({ digits: p, method: 'SECONDARY_SUBSTITUTED' });
+    // 3. Combinations across Top 5 / Top 6 vectors (Secondary Substituted)
+    const top6 = vectors.slice(0, 6).map((v) => v.digit);
+    if (top6.length >= 5) {
+      const combos = [
+        [top6[0], top6[1], top6[2], top6[4]],
+        [top6[0], top6[1], top6[3], top6[4]],
+        [top6[0], top6[2], top6[3], top6[4]],
+        [top6[1], top6[2], top6[3], top6[4]],
+      ];
+      if (top6.length >= 6) {
+        combos.push([top6[0], top6[1], top6[2], top6[5]]);
+        combos.push([top6[0], top6[3], top6[4], top6[5]]);
+      }
+      for (const combo of combos) {
+        const perms = getPermutations(combo);
+        for (const p of perms.slice(0, 6)) {
+          const numStr = p.join('');
+          if (!seenCombos.has(numStr)) {
+            seenCombos.add(numStr);
+            candidatePool.push({ digits: p, method: 'SECONDARY_SUBSTITUTED' });
+          }
         }
       }
     }

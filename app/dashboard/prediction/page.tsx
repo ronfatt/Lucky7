@@ -17,7 +17,7 @@ export default function PredictionPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-4 px-2 space-y-6">
-      <PredictionDashboardView profile={profile} initialDate="2026-09-13" />
+      <PredictionDashboardView profile={profile} />
     </div>
   );
 }

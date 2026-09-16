@@ -160,28 +160,36 @@ export class CandidateScoringEngine {
     if (digits[0] === digits[3]) patternScore += 6.0; // Flanking balance
     patternScore = Math.min(98.0, patternScore);
 
-    // 8. Four Pillars Personal Alignment (Fine-grained person-to-person differentiation)
+    // 8. Dynamic Tian-Ren Synergy (天人合一协同加权: 流日天时 × 本命格局)
     let personalBonus = 0;
+
+    // A. Daily Active Digit Resonance (流日高能数位贯通)
+    const topActiveDigits = dailyActivatedDigits.slice(0, 3).map((a) => a.digit);
+    for (const d of digits) {
+      if (topActiveDigits.includes(d)) personalBonus += 1.2;
+    }
+
+    // B. Four Pillars Personal Alignment (本命归元)
     if (fourPillars) {
       // Leading digit (体卦首位): Day Master affinity (体卦归元)
-      if (getDigitEl(digits[0]) === fourPillars.dayMasterElement) personalBonus += 6.0;
-      // Second digit (坐基生旺): Day Branch affinity
-      if (fourPillars.dayBranch && getDigitEl(digits[1]) === BRANCH_ELEMENT_MAP[fourPillars.dayBranch]) personalBonus += 4.5;
-      // Third digit (节令根基): Month Branch or Year Stem affinity
-      if (
-        (fourPillars.monthBranch && getDigitEl(digits[2]) === BRANCH_ELEMENT_MAP[fourPillars.monthBranch]) ||
-        (fourPillars.yearStem && getDigitEl(digits[2]) === STEM_ELEMENT_MAP[fourPillars.yearStem])
-      ) {
-        personalBonus += 3.5;
-      }
+      if (getDigitEl(digits[0]) === fourPillars.dayMasterElement) personalBonus += 2.2;
       // Ending digit (用象纳气): Hour Branch affinity
-      if (fourPillars.hourBranch && getDigitEl(digits[3]) === BRANCH_ELEMENT_MAP[fourPillars.hourBranch]) personalBonus += 5.0;
+      if (fourPillars.hourBranch && getDigitEl(digits[3]) === BRANCH_ELEMENT_MAP[fourPillars.hourBranch]) personalBonus += 1.8;
+
+      // Wealth Star Affinity (我克者为财 - 偏财/正财星)
+      const wealthMap: Record<WuXingElement, WuXingElement> = {
+        Wood: 'Earth', Fire: 'Metal', Earth: 'Water', Metal: 'Wood', Water: 'Fire',
+      };
+      const userWealthEl = wealthMap[fourPillars.dayMasterElement];
+      for (const d of digits) {
+        if (getDigitEl(d) === userWealthEl) personalBonus += 0.8;
+      }
 
       // Birth Day numerology root
       if (birthDate) {
         const dayNum = parseInt(birthDate.split('-')[2] || '1', 10);
         const dayRoot = (dayNum % 9) || 9;
-        if (digits.includes(dayRoot)) personalBonus += 3.0;
+        if (digits.includes(dayRoot)) personalBonus += 1.2;
       }
     }
 

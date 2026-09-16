@@ -9,10 +9,11 @@ import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
 import { RealitySignalStore } from '@/lib/signals/reality-signal-store';
 import { DigitFeatureVectorEngine } from '@/lib/synthesis/digit-feature-vector-engine';
 import { CandidateGenerationEngine } from '@/lib/synthesis/candidate-generation-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const dateStr = searchParams.get('date') || '2026-09-13';
+  const dateStr = searchParams.get('date') || getRealtimeDate();
   const limit = Math.min(50, Math.max(5, Number(searchParams.get('limit')) || 20));
 
   const profile: BirthProfile = {

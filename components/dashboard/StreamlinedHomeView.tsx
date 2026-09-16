@@ -71,10 +71,11 @@ import { LiveDrawHitBanner } from '@/components/lottery/LiveDrawHitBanner';
 import { WealthDirectionCompassCard } from '@/components/compass/WealthDirectionCompassCard';
 import { BettingStrategyModal } from '@/components/prediction/BettingStrategyModal';
 import { PredictionLedgerModal } from '@/components/prediction/PredictionLedgerModal';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export function StreamlinedHomeView() {
   const { profile, updateProfile } = useUserProfile();
-  const [selectedDate, setSelectedDate] = useState<string>('2026-09-13');
+  const [selectedDate, setSelectedDate] = useState<string>(() => getRealtimeDate(profile?.timezone));
   const [refreshCount, setRefreshCount] = useState<number>(0);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);

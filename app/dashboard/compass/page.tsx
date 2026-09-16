@@ -18,7 +18,7 @@ export default function DashboardCompassPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-4 px-2 space-y-6">
-      <PersonalLuckCompass profile={profile} initialDate="2026-09-13" defaultMode="daily" />
+      <PersonalLuckCompass profile={profile} defaultMode="daily" />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const dateStr = body.date || '2026-09-13';
+    const dateStr = body.date || getRealtimeDate();
 
     return NextResponse.json({
       success: true,

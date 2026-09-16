@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node tests/digit-foundation.test.mjs && node tests/number-features.test.mjs && node tests/scoring-and-bias.test.mjs && node tests/calendar-and-solarterms.test.mjs && node tests/ziwei-chart.test.mjs && node tests/daily-activation.test.mjs && node tests/direction-engine.test.mjs && node tests/number-synthesis.test.mjs && node tests/backtest-engine.test.mjs && node tests/malaysia-draws.test.mjs && node tests/classical-literature.test.mjs && node tests/canon-priority-engine.test.mjs && node tests/windfall-wealth-engine.test.mjs"
+    "test": "/usr/local/bin/node tests/digit-foundation.test.mjs && /usr/local/bin/node tests/number-features.test.mjs && /usr/local/bin/node tests/scoring-and-bias.test.mjs && /usr/local/bin/node tests/calendar-and-solarterms.test.mjs && /usr/local/bin/node tests/ziwei-chart.test.mjs && /usr/local/bin/node tests/daily-activation.test.mjs && /usr/local/bin/node tests/direction-engine.test.mjs && /usr/local/bin/node tests/number-synthesis.test.mjs && /usr/local/bin/node tests/backtest-engine.test.mjs && /usr/local/bin/node tests/malaysia-draws.test.mjs && /usr/local/bin/node tests/classical-literature.test.mjs && /usr/local/bin/node tests/canon-priority-engine.test.mjs && /usr/local/bin/node tests/windfall-wealth-engine.test.mjs && /usr/local/bin/node tests/daily-realtime-mothercode.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",

@@ -191,6 +191,8 @@ export interface DailyTimeSignature {
   yearStemBranch: string;
   monthStemBranch: string;
   dayStemBranch: string;
+  dayStem?: string;
+  dayBranch?: string;
   hourStemBranch: string;
   woodScore: number;
   fireScore: number;

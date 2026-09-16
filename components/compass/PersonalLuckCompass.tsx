@@ -38,6 +38,8 @@ import { PersonalDirectionEngine } from '@/lib/directions/personal-direction-eng
 import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
 import { SpatialNumberMatrix } from '@/lib/directions/spatial-number-matrix';
 
+import { getRealtimeDate } from '@/lib/utils/date-utils';
+
 interface PersonalLuckCompassProps {
   profile: BirthProfile;
   initialDate?: string;
@@ -46,10 +48,11 @@ interface PersonalLuckCompassProps {
 
 export function PersonalLuckCompass({
   profile,
-  initialDate = '2026-09-13',
+  initialDate,
   defaultMode = 'daily',
 }: PersonalLuckCompassProps) {
-  const [selectedDate, setSelectedDate] = useState<string>(initialDate);
+  const activeInitial = initialDate || getRealtimeDate(profile?.timezone);
+  const [selectedDate, setSelectedDate] = useState<string>(activeInitial);
   const [viewMode, setViewMode] = useState<'daily' | 'personal'>(defaultMode);
   const [selectedDirection, setSelectedDirection] = useState<DirectionCode>('S');
 

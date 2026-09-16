@@ -12,12 +12,13 @@ import type {
   WuXingElement,
   ZiWeiChartData,
 } from '../../../types/zwtsp.ts';
-import { CalendarConversionEngine } from '../calendar/calendar-engine.ts';
+import { CalendarConversionEngine, BRANCH_ELEMENTS, STEM_ELEMENTS } from '../calendar/calendar-engine.ts';
 import { SolarTermEngine } from '../calendar/solar-terms.ts';
+import { FOUR_TRANSFORMATIONS_BY_STEM } from '../ziwei/ziwei-engine.ts';
 import { getDigitElement, evaluateElementRelationship } from '../../numerology/digit-foundation.ts';
 
 export class DailyEngine {
-  public static readonly VERSION = 'DAILY-V1.0';
+  public static readonly VERSION = 'DAILY-V2.0';
 
   /**
    * Generates complete Daily Time Signature for a given Gregorian date and timezone
@@ -28,24 +29,27 @@ export class DailyEngine {
     const fourPillars = CalendarConversionEngine.getFourPillars(dateStr, '10:00:00', true);
 
     // Calculate Daily Five Elements Signature (0-100)
-    // Dynamic weights: Season 35% + Day Stem/Branch 35% + Month Branch 20% + Year 10%
+    // Daily commander: Day Stem (35 pts) + Day Branch (30 pts) + Month (15 pts) + Season (10 pts)
     const elementScores: Record<WuXingElement, number> = {
       Wood: 15, Fire: 15, Earth: 15, Metal: 15, Water: 15,
     };
 
-    // Seasonal boost (+35 pts)
+    // Seasonal background (+10 pts)
     const seasonMap: Record<string, WuXingElement> = {
       Spring: 'Wood', Summer: 'Fire', Autumn: 'Metal', Winter: 'Water', FourSeasonsEnd: 'Earth'
     };
-    elementScores[seasonMap[solarTerm.season]] += 35;
+    elementScores[seasonMap[solarTerm.season]] += 10;
 
-    // Day Stem & Branch (+30 pts)
-    elementScores[fourPillars.dayElement] += 18;
-    const dayBranchEl = fourPillars.elementDistribution[fourPillars.dayElement] ? fourPillars.dayElement : 'Earth';
-    elementScores[dayBranchEl] += 12;
+    // Day Stem is the daily commander (+35 pts)
+    const dayStemEl = STEM_ELEMENTS[fourPillars.dayStem] || fourPillars.dayElement || 'Fire';
+    elementScores[dayStemEl] += 35;
 
-    // Month Stem/Branch (+20 pts)
-    elementScores[fourPillars.monthElement] += 20;
+    // Day Branch is the earthly foundation (+30 pts)
+    const dayBranchEl = BRANCH_ELEMENTS[fourPillars.dayBranch] || 'Earth';
+    elementScores[dayBranchEl] += 30;
+
+    // Month Stem/Branch (+15 pts)
+    elementScores[fourPillars.monthElement] += 15;
 
     // Normalize element scores to 0-100 range
     let dominantElement: WuXingElement = 'Metal';
@@ -86,6 +90,8 @@ export class DailyEngine {
       yearStemBranch: `${fourPillars.yearStem}${fourPillars.yearBranch}年`,
       monthStemBranch: `${fourPillars.monthStem}${fourPillars.monthBranch}月`,
       dayStemBranch: `${fourPillars.dayStem}${fourPillars.dayBranch}日`,
+      dayStem: fourPillars.dayStem,
+      dayBranch: fourPillars.dayBranch,
       hourStemBranch: `${fourPillars.hourStem || '丙'}${fourPillars.hourBranch || '午'}时`,
       woodScore: elementScores.Wood,
       fireScore: elementScores.Fire,
@@ -105,10 +111,12 @@ export class DailyEngine {
   }
 
   /**
-   * Activates 12 Palaces dynamically against today's time signature
+   * Activates 12 Palaces dynamically against today's time signature & Daily ZiWei Flying Stars (流日四化)
    */
   public static activatePalaces(chart: ZiWeiChartData, sig: DailyTimeSignature): DailyPalaceActivation[] {
     const results: DailyPalaceActivation[] = [];
+    const dayStem = sig.dayStem || (sig.dayStemBranch ? sig.dayStemBranch.replace('日', '')[0] : '甲');
+    const dailySiHua = FOUR_TRANSFORMATIONS_BY_STEM[dayStem] || { Lu: '廉贞', Quan: '破军', Ke: '武曲', Ji: '太阳' };
 
     for (const p of chart.palaces) {
       const elRel = evaluateElementRelationship(p.element, sig.dominantElement);
@@ -123,18 +131,29 @@ export class DailyEngine {
       if (p.palaceName === '财帛宫') palaceBonus = 12;
       else if (p.palaceName === '迁移宫') palaceBonus = 10;
       else if (p.palaceName === '福德宫') palaceBonus = 8;
-      else if (p.palaceName === '命宫') palaceBonus = 6;
+      else if (p.palaceName === '命宫') palaceBonus = 8;
 
-      // Transformation bonus
+      // Birth Transformation bonus
       let transBonus = 0;
       for (const t of p.transformations) {
-        if (t.transformation === 'Lu') transBonus += 15;
-        if (t.transformation === 'Quan') transBonus += 10;
-        if (t.transformation === 'Ke') transBonus += 8;
-        if (t.transformation === 'Ji') transBonus -= 12;
+        if (t.transformation === 'Lu') transBonus += 10;
+        if (t.transformation === 'Quan') transBonus += 7;
+        if (t.transformation === 'Ke') transBonus += 5;
+        if (t.transformation === 'Ji') transBonus -= 8;
       }
 
-      const activationScore = Math.min(100, Math.max(15, Math.round(50 * 0.3 + elementScore * 0.4 + palaceBonus + transBonus)));
+      // Dynamic Daily SiHua Flying Star Boost (流日四化飞星加持)
+      let dailySiHuaBonus = 0;
+      const palaceStarNames = p.stars ? p.stars.map((s) => s.starName) : [];
+      if (palaceStarNames.includes(dailySiHua.Lu)) dailySiHuaBonus += 25; // 流日化禄飞入本宫
+      if (palaceStarNames.includes(dailySiHua.Quan)) dailySiHuaBonus += 18; // 流日化权飞入本宫
+      if (palaceStarNames.includes(dailySiHua.Ke)) dailySiHuaBonus += 12; // 流日化科飞入本宫
+      if (palaceStarNames.includes(dailySiHua.Ji)) dailySiHuaBonus -= 15; // 流日化忌飞入本宫
+
+      const activationScore = Math.min(
+        100,
+        Math.max(15, Math.round(50 * 0.2 + elementScore * 0.4 + palaceBonus + transBonus + dailySiHuaBonus))
+      );
       const status = this.classifyLevel(activationScore);
 
       results.push({
@@ -143,7 +162,7 @@ export class DailyEngine {
         timeScore: 70,
         elementScore,
         starScore: 65,
-        transformationScore: 50 + transBonus,
+        transformationScore: 50 + transBonus + dailySiHuaBonus,
         activationScore,
         status,
       });
@@ -155,7 +174,7 @@ export class DailyEngine {
 
   /**
    * Dynamic Personal Daily Activation of Digits 0-9:
-   * Personal DNA × Daily Time Structure
+   * Personal DNA × Daily Time Structure × Daily Stem/Branch Resonance
    */
   public static activateNumbers(
     dna: PersonalNumberDNA,
@@ -167,6 +186,14 @@ export class DailyEngine {
     const activePalaceMap = new Map(palaces.map(p => [p.palaceName, p.activationScore]));
     const wealthPalaceScore = activePalaceMap.get('财帛宫') || 50;
     const movePalaceScore = activePalaceMap.get('迁移宫') || 50;
+    const topPalace = palaces[0];
+
+    const dayStem = sig.dayStem || (sig.dayStemBranch ? sig.dayStemBranch.replace('日', '')[0] : '甲');
+    const STEM_NUMS: Record<string, number[]> = {
+      甲: [1, 6, 9], 乙: [2, 7, 8], 丙: [3, 8, 7], 丁: [4, 9, 6], 戊: [5, 0, 5],
+      己: [5, 0, 9], 庚: [4, 9, 8], 辛: [1, 6, 7], 壬: [1, 6, 6], 癸: [2, 7, 5],
+    };
+    const dayNums = STEM_NUMS[dayStem] || [];
 
     for (let d = 0; d <= 9; d++) {
       const personalBase = dna.scoresByDigit[d] || 50;
@@ -182,18 +209,23 @@ export class DailyEngine {
       // Palace boost
       const palaceScore = Math.round((wealthPalaceScore * 0.6) + (movePalaceScore * 0.4));
 
-      // Star & transformation bonus
-      const starScore = dna.coreNumbers.includes(d) ? 88 : 55;
-      const transformationScore = dna.coreNumbers.includes(d) ? 80 : 50;
+      // Daily Stem Auspicious Resonance
+      let stemResonanceBonus = dayNums.includes(d) ? 20 : 0;
+      if (topPalace && activePalaceMap.get(topPalace.palaceName) && activePalaceMap.get(topPalace.palaceName)! > 70) {
+        stemResonanceBonus += 5;
+      }
 
-      // Dynamic weighted activation formula
-      // 35% Personal Base + 25% Daily Element + 15% Daily Time + 15% Palace + 10% Star
+      // Star & transformation bonus
+      const starScore = dna.coreNumbers.includes(d) ? 80 : 55;
+      const transformationScore = dna.coreNumbers.includes(d) ? 75 : 50;
+
+      // Dynamic weighted activation formula: 80% Time/Space + 20% Personal Base
       const rawActivation =
-        personalBase * 0.35 +
-        dailyElementScore * 0.25 +
-        timeScore * 0.15 +
+        personalBase * 0.20 +
+        dailyElementScore * 0.30 +
+        timeScore * 0.25 +
         palaceScore * 0.15 +
-        starScore * 0.10;
+        stemResonanceBonus;
 
       const activationScore = Math.min(100, Math.max(10, Math.round(rawActivation)));
 
@@ -209,11 +241,11 @@ export class DailyEngine {
         rank: 0, // will be assigned after sorting
         classification: 'Secondary',
         trace: [
-          { factor: '本命基因基准 (Personal Base)', description: `静态本命数理基准`, points: Math.round(personalBase * 0.35) },
-          { factor: `今日五行场能 (${el})`, description: `当日五行得分: ${dailyElementScore}`, points: Math.round(dailyElementScore * 0.25) },
-          { factor: `时空生克共振`, description: `${timeRel.label} (时律评分配比)`, points: Math.round(timeScore * 0.15) },
+          { factor: '本命基因基准 (Personal Base)', description: `静态本命数理基准`, points: Math.round(personalBase * 0.20) },
+          { factor: `今日五行场能 (${el})`, description: `当日五行得分: ${dailyElementScore}`, points: Math.round(dailyElementScore * 0.30) },
+          { factor: `时空日干生克共振`, description: `${timeRel.label} · 流日干支气机`, points: Math.round(timeScore * 0.25) },
           { factor: `活跃宫位加持 (财帛/迁移)`, description: `活跃宫位均分: ${palaceScore}`, points: Math.round(palaceScore * 0.15) },
-          { factor: `星曜格局催发`, description: `主星四化气机调摄`, points: Math.round(starScore * 0.10) },
+          { factor: `流日干支飞星神数`, description: `流日值符天机调摄`, points: stemResonanceBonus },
         ],
       });
     }
