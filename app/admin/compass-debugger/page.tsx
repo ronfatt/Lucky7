@@ -18,10 +18,11 @@ import { PersonalNumberDNAEngine } from '@/lib/engines/personal-dna/personal-dna
 import { DailyEngine } from '@/lib/engines/daily/daily-engine';
 import { PersonalDirectionEngine } from '@/lib/directions/personal-direction-engine';
 import { DailyDirectionEngine } from '@/lib/directions/daily-direction-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export default function CompassDebuggerPage() {
   const [testAzimuth, setTestAzimuth] = useState<number>(135);
-  const [simDate, setSimDate] = useState<string>('2026-09-13');
+  const [simDate, setSimDate] = useState<string>(() => getRealtimeDate());
   const [profile] = useState<BirthProfile>({
     name: '李知命 (调试档案)',
     gender: 'male',

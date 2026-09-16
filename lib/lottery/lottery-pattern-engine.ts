@@ -134,7 +134,7 @@ export class LotteryPatternEngine {
       // Latest hit date
       const latestDateStr = hits[0].drawDate; // hits are sorted descending
       const latestDate = new Date(latestDateStr);
-      const currentDate = new Date('2026-09-13');
+      const currentDate = new Date();
       const diffTime = Math.abs(currentDate.getTime() - latestDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       daysSinceLastHit = diffDays;

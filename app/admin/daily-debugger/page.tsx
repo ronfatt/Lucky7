@@ -10,10 +10,11 @@ import { PersonalNumberDNAEngine } from '@/lib/engines/personal-dna/personal-dna
 import { ZiWeiEngine } from '@/lib/engines/ziwei/ziwei-engine';
 import type { BirthProfile } from '@/types/zwtsp';
 import { CalculationTraceModal } from '@/components/daily/CalculationTraceModal';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export default function AdminDailyDebuggerPage() {
-  const [testDate, setTestDate] = useState<string>('2026-09-13');
   const [testTimezone, setTestTimezone] = useState<string>('Asia/Shanghai');
+  const [testDate, setTestDate] = useState<string>(() => getRealtimeDate(testTimezone));
   const [selectedDigit, setSelectedDigit] = useState<number | null>(null);
 
   const profile: BirthProfile = {

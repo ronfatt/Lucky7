@@ -10,6 +10,7 @@ import type {
   ZiWeiPalaceInstance,
 } from '../../../types/zwtsp.ts';
 import { FOUR_TRANSFORMATIONS_BY_STEM } from '../ziwei/ziwei-engine.ts';
+import { getRealtimeDate } from '../../utils/date-utils.ts';
 
 export type WindfallSuitability = 'SUITABLE' | 'NEUTRAL' | 'UNSUITABLE' | 'STRICTLY_AVOID';
 
@@ -388,7 +389,7 @@ export class WindfallWealthEngine {
    */
   public static calculate7DayDrawForecast(
     chart: ZiWeiChartData,
-    startDateStr: string = '2026-09-13'
+    startDateStr: string = getRealtimeDate()
   ): DrawDayForecastItem[] {
     const startDate = new Date(startDateStr);
     const dayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];

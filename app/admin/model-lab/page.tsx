@@ -16,10 +16,11 @@ import { RealitySignalStore } from '@/lib/signals/reality-signal-store';
 import { DigitFeatureVectorEngine } from '@/lib/synthesis/digit-feature-vector-engine';
 import { CandidateGenerationEngine } from '@/lib/synthesis/candidate-generation-engine';
 import { MotherCodeEngine } from '@/lib/synthesis/mother-code-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export default function AdminModelLabPage() {
   const [activeTab, setActiveTab] = useState<'FULL' | 'DNA_ONLY' | 'DAILY_ONLY' | 'REALITY_ONLY'>('FULL');
-  const [testDate, setTestDate] = useState<string>('2026-09-13');
+  const [testDate, setTestDate] = useState<string>(() => getRealtimeDate());
 
   const profile: BirthProfile = {
     name: '李知命 (实验档案)',

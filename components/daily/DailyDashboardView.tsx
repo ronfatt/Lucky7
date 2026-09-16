@@ -40,12 +40,13 @@ import { useUserProfile } from '@/lib/profile/user-profile-store';
 import { EditProfileModal } from '@/components/destiny/EditProfileModal';
 import { WindfallWealthEngine } from '@/lib/engines/daily/windfall-wealth-engine';
 import { WindfallWealthCard } from '@/components/prediction/WindfallWealthCard';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 export function DailyDashboardView({ profile: propProfile }: { profile: BirthProfile }) {
   const { profile: storedProfile, updateProfile } = useUserProfile();
   const profile = storedProfile || propProfile;
 
-  const [selectedDate, setSelectedDate] = useState<string>('2026-09-13');
+  const [selectedDate, setSelectedDate] = useState<string>(() => getRealtimeDate(profile?.timezone));
   const [selectedTrace, setSelectedTrace] = useState<any | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
