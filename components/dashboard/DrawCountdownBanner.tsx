@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Clock, Trophy, AlertCircle, Sparkles } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 
@@ -113,9 +114,17 @@ export function DrawCountdownBanner({ dateStr = '2026-09-13' }: DrawCountdownBan
               </div>
             </>
           ) : (
-            <div className="flex items-center gap-1 text-emerald-400 font-sans text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>今日开彩已揭晓 · 请核对心水号码</span>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 text-emerald-400 font-sans text-xs font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>今日开彩已揭晓</span>
+              </div>
+              <Link
+                href="/draws"
+                className="px-2 py-0.5 rounded-lg bg-gold-500/20 hover:bg-gold-500/30 border border-gold-500/40 text-gold-300 font-bold text-[11px] transition"
+              >
+                查看各平台中奖出彩 &rarr;
+              </Link>
             </div>
           )}
         </div>

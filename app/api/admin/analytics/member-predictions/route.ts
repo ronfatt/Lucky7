@@ -119,7 +119,7 @@ export async function GET(request: Request) {
     if (format === 'csv') {
       const BOM = '\uFEFF';
       const rows = [
-        ['推演日期', '干支时空', '会员姓名', '会员邮箱', '4位核心母码', '气场得分', '偏财指数', '吉神方位', '吉位时辰', '吉色穿搭', '12组变体号码', '是否已收藏'].join(','),
+        ['推演日期', '干支时空', '会员姓名', '会员邮箱', '4位核心母码', '气场得分', '偏财指数', '吉神方位', '吉位时辰', '吉色穿搭', '12组变体号码', '开彩出奖状态', '是否已收藏'].join(','),
       ];
 
       const clean = (str: any) => `"${String(str || '').replace(/"/g, '""')}"`;
@@ -137,6 +137,7 @@ export async function GET(request: Request) {
           clean(item.auspiciousHour),
           clean(item.luckyColor),
           clean(item.variations?.slice(0, 6).join(' / ')),
+          clean(item.hitStatus?.hasHit ? item.hitStatus.hitSummary : '未命中'),
           clean(item.isSaved ? '已收藏' : '未收藏'),
         ].join(','));
       });

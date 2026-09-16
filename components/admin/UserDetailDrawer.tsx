@@ -329,6 +329,12 @@ export function UserDetailDrawer({ userId, userEmail, onClose }: UserDetailDrawe
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-gold-400 font-serif">
                               {p.dayStemBranch}
                             </span>
+                            {p.hasHit && p.hitStatus && (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-gold-500/20 border border-gold-500/50 text-gold-300 font-bold flex items-center gap-1 shadow-sm">
+                                <span>🎉</span>
+                                <span>{p.hitStatus.highestOperatorZh} · {p.hitStatus.highestTierZh?.split(' ')[0]}</span>
+                              </span>
+                            )}
                             {p.isSaved && (
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/60 border border-purple-800/60 text-purple-300">
                                 已收藏

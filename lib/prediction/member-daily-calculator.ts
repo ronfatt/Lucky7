@@ -19,6 +19,7 @@ import { VariationCodeEngine } from '@/lib/synthesis/variation-code-engine';
 import { WindfallWealthEngine } from '@/lib/engines/daily/windfall-wealth-engine';
 import { LuckyClothingEngine } from '@/lib/engines/daily/lucky-clothing-engine';
 import { WealthDirectionNavigator } from '@/lib/directions/wealth-direction-navigator';
+import { LotteryHitEngine, type DailyDrawHitReport } from '@/lib/lottery/lottery-hit-engine';
 
 export interface MemberDailyPrediction {
   userId: string;
@@ -39,6 +40,7 @@ export interface MemberDailyPrediction {
   variations: string[];
   isSaved?: boolean;
   hasHit?: boolean;
+  hitStatus?: DailyDrawHitReport;
   viewCount?: number;
 }
 
@@ -139,6 +141,13 @@ export class MemberDailyCalculator {
       windfallAnalysis.avoidHour
     );
 
+    // 6. Cross-platform Lottery Hit Check
+    const hitReport = LotteryHitEngine.checkHitsForDate(
+      dateStr,
+      motherCodeObj.motherCode,
+      variations.map((v) => v.resultNumber)
+    );
+
     return {
       userId: profile.id || '',
       userEmail: profile.email || '',
@@ -156,6 +165,8 @@ export class MemberDailyCalculator {
       luckyColor: clothingAdvice.primaryColors?.[0]?.name || '金色',
       colorReason: clothingAdvice.overallAdviceZh,
       variations: variations.map((v) => v.resultNumber),
+      hasHit: hitReport.hasHit,
+      hitStatus: hitReport,
     };
   }
 }

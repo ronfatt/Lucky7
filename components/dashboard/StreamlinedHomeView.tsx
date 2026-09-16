@@ -57,6 +57,7 @@ import { WindfallWealthEngine } from '@/lib/engines/daily/windfall-wealth-engine
 import { LuckyClothingEngine } from '@/lib/engines/daily/lucky-clothing-engine';
 import { MalaysiaLotteryProvider } from '@/lib/lottery/malaysia-provider';
 import { LotteryPatternEngine } from '@/lib/lottery/lottery-pattern-engine';
+import { LotteryHitEngine, type DailyDrawHitReport } from '@/lib/lottery/lottery-hit-engine';
 import { SavedPredictionsStore } from '@/lib/prediction/saved-predictions-store';
 import { SocialShareHelper } from '@/lib/prediction/social-share-helper';
 
@@ -66,6 +67,7 @@ import { SavedPredictionsModal } from '@/components/prediction/SavedPredictionsM
 import { DreamImageryDivinationModal } from '@/components/prediction/DreamImageryDivinationModal';
 import { MetaphysicalPosterModal } from '@/components/prediction/MetaphysicalPosterModal';
 import { DrawCountdownBanner } from '@/components/dashboard/DrawCountdownBanner';
+import { LiveDrawHitBanner } from '@/components/lottery/LiveDrawHitBanner';
 import { WealthDirectionCompassCard } from '@/components/compass/WealthDirectionCompassCard';
 import { BettingStrategyModal } from '@/components/prediction/BettingStrategyModal';
 import { PredictionLedgerModal } from '@/components/prediction/PredictionLedgerModal';
@@ -160,6 +162,15 @@ export function StreamlinedHomeView() {
   const variations = useMemo(() => {
     return VariationCodeEngine.generateVariations(motherCode.motherCode, motherCode.score, 12);
   }, [motherCode]);
+
+  // Real-time Lottery Hit Assessment for this member on selectedDate
+  const hitReport = useMemo(() => {
+    return LotteryHitEngine.checkHitsForDate(
+      selectedDate,
+      motherCode.motherCode,
+      variations.map((v) => v.resultNumber)
+    );
+  }, [selectedDate, motherCode.motherCode, variations]);
 
   // 5. Historical Draw Records for this Mother Code
   const patternAnalysis = useMemo(() => {
@@ -354,6 +365,9 @@ export function StreamlinedHomeView() {
           </div>
         </div>
       </div>
+
+      {/* 🎉 Celebratory Live Draw Hit Banner (When numbers hit draws) */}
+      <LiveDrawHitBanner report={hitReport} dateStr={selectedDate} />
 
       {/* 1. Core Focus: Giant 4-Digit Daily Number Card */}
       <Card className="bg-gradient-to-br from-[#101626] via-[#0C101A] to-[#070A12] border-gold-500/50 p-5 sm:p-8 text-center relative overflow-hidden shadow-gold-glow">

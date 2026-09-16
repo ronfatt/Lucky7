@@ -44,6 +44,8 @@ interface PredictionItem {
   colorReason: string;
   variations: string[];
   isSaved?: boolean;
+  hasHit?: boolean;
+  hitStatus?: any;
   viewCount?: number;
 }
 
@@ -52,6 +54,7 @@ export function AdminDailyPredictionsView() {
   const [selectedDate, setSelectedDate] = useState(todayStr);
   const [selectedUserId, setSelectedUserId] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [filterOnlyHits, setFilterOnlyHits] = useState(false);
   const [predictions, setPredictions] = useState<PredictionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
@@ -115,6 +118,7 @@ export function AdminDailyPredictionsView() {
   };
 
   const filteredPredictions = predictions.filter((p) => {
+    if (filterOnlyHits && !p.hasHit) return false;
     const q = searchKeyword.toLowerCase();
     return (
       p.userName?.toLowerCase().includes(q) ||
@@ -122,6 +126,8 @@ export function AdminDailyPredictionsView() {
       p.motherCode?.includes(q)
     );
   });
+
+  const totalHitsCount = predictions.filter((p) => p.hasHit).length;
 
   return (
     <div className="space-y-4">
@@ -166,6 +172,30 @@ export function AdminDailyPredictionsView() {
               className="bg-[#060810] border border-slate-800 text-xs text-gold-200 px-3 py-1.5 rounded-xl focus:outline-none focus:border-gold-500/50 font-mono"
             />
           </div>
+
+          {/* 1-Click Filter: Only Hits */}
+          <button
+            type="button"
+            onClick={() => setFilterOnlyHits(!filterOnlyHits)}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 shadow-sm ${
+              filterOnlyHits
+                ? 'bg-gradient-to-r from-amber-500 to-gold-500 text-obsidian-950 border-amber-400 shadow-gold-500/30'
+                : 'bg-[#060810] border-slate-800 text-slate-300 hover:border-gold-500/50 hover:text-gold-300'
+            }`}
+          >
+            <span>🏆 仅看出奖会员</span>
+            <span
+              className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                filterOnlyHits
+                  ? 'bg-obsidian-950 text-gold-300'
+                  : totalHitsCount > 0
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold'
+                  : 'bg-slate-800 text-slate-400'
+              }`}
+            >
+              {totalHitsCount}
+            </span>
+          </button>
 
           {/* Member Dropdown Filter */}
           <div className="relative">
@@ -229,6 +259,7 @@ export function AdminDailyPredictionsView() {
                 <th className="p-3.5 pl-4">推演日期 / 干支</th>
                 <th className="p-3.5">会员身份</th>
                 <th className="p-3.5 text-center">4 位核心推演母码</th>
+                <th className="p-3.5">开彩出奖状态</th>
                 <th className="p-3.5">气场契合度 / 偏财</th>
                 <th className="p-3.5">吉位罗盘 / 时辰</th>
                 <th className="p-3.5">吉色穿搭</th>
@@ -238,14 +269,14 @@ export function AdminDailyPredictionsView() {
             <tbody className="divide-y divide-slate-800/60 font-sans">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-500 font-serif space-y-2">
+                  <td colSpan={8} className="py-16 text-center text-slate-500 font-serif space-y-2">
                     <div className="w-6 h-6 rounded-full border-2 border-gold-500 border-t-transparent animate-spin mx-auto" />
                     <p className="text-xs">正在实时为各会员校准时空洛书并推算当日数字...</p>
                   </td>
                 </tr>
               ) : filteredPredictions.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-500 font-serif">
+                  <td colSpan={8} className="py-12 text-center text-slate-500 font-serif">
                     未检索到该日期或条件下的会员推演数据。
                   </td>
                 </tr>
@@ -289,6 +320,29 @@ export function AdminDailyPredictionsView() {
                           <div className="text-[10px] text-gold-champagne/70 font-mono mt-0.5">
                             置信评级: {item.confidence}
                           </div>
+                        </td>
+
+                        {/* Lottery Hit Outcome */}
+                        <td className="p-3.5 whitespace-nowrap">
+                          {item.hasHit && item.hitStatus ? (
+                            <div className="space-y-1">
+                              <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-gradient-to-r from-amber-500/20 via-gold-500/20 to-amber-500/20 border border-gold-500/60 text-gold-300 font-bold text-xs shadow-sm shadow-gold-500/10">
+                                <span>🎉</span>
+                                <span>{item.hitStatus.highestOperatorZh} · {item.hitStatus.highestTierZh.split(' ')[0]}</span>
+                              </div>
+                              <div className="text-[10px] text-emerald-400 font-mono">
+                                命中 {item.hitStatus.totalHits} 次 ({item.hitStatus.directHits > 0 ? `直落×${item.hitStatus.directHits}` : `变体×${item.hitStatus.variationHits}`})
+                              </div>
+                            </div>
+                          ) : item.hitStatus?.drawsAvailable ? (
+                            <div className="text-slate-500 text-[11px] font-mono">
+                              未中奖
+                            </div>
+                          ) : (
+                            <div className="text-slate-600 text-[11px]">
+                              待开彩
+                            </div>
+                          )}
                         </td>
 
                         {/* Scores */}
@@ -336,7 +390,7 @@ export function AdminDailyPredictionsView() {
                               type="button"
                               className="p-1 rounded-lg text-slate-400 hover:text-white transition flex items-center gap-0.5 text-[11px]"
                             >
-                              <span>变体</span>
+                              <span>详情</span>
                               {isExpanded ? (
                                 <ChevronUp className="w-3.5 h-3.5" />
                               ) : (
@@ -347,10 +401,46 @@ export function AdminDailyPredictionsView() {
                         </td>
                       </tr>
 
-                      {/* Expanded Row: 12 Variations Grid */}
+                      {/* Expanded Row: Lottery Hits + 12 Variations Grid */}
                       {isExpanded && (
                         <tr className="bg-obsidian-900/60 border-b border-gold-500/20">
-                          <td colSpan={7} className="p-4 pl-6">
+                          <td colSpan={8} className="p-4 pl-6 space-y-4">
+                            {/* Hit Details if any */}
+                            {item.hasHit && item.hitStatus?.hits && item.hitStatus.hits.length > 0 && (
+                              <div className="p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 space-y-2">
+                                <div className="text-xs font-bold text-gold-300 font-serif flex items-center gap-2">
+                                  <span>🏆</span>
+                                  <span>开彩中奖明细 ({item.hitStatus.hits.length} 项命中)</span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                                  {item.hitStatus.hits.map((h: any, hIdx: number) => (
+                                    <div
+                                      key={hIdx}
+                                      className="p-2.5 rounded-lg bg-obsidian-950 border border-gold-500/20 flex items-center justify-between text-xs"
+                                    >
+                                      <div>
+                                        <div className="flex items-center gap-1.5 font-bold text-slate-200">
+                                          <span className="text-amber-400">{h.operatorNameZh}</span>
+                                          <span className="text-gold-300">{h.tierZh.split(' ')[0]}</span>
+                                        </div>
+                                        <div className="text-[10px] text-slate-400 mt-0.5">
+                                          期号: {h.drawNo} · 开出: <span className="font-mono text-white font-bold">{h.winningNumber}</span>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className="font-mono font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 text-[11px]">
+                                          {h.matchedNumber}
+                                        </span>
+                                        <div className="text-[10px] text-emerald-400 mt-0.5">
+                                          {h.hitSourceZh} · {h.matchTypeZh}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             <div className="space-y-2.5">
                               <div className="text-xs font-bold text-gold-champagne font-serif flex items-center gap-2">
                                 <Sparkles className="w-3.5 h-3.5 text-gold-400" />
