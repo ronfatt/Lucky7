@@ -23,6 +23,8 @@ import { useUserProfile } from '@/lib/profile/user-profile-store';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { MemberCenterModal } from '@/components/auth/MemberCenterModal';
 import { EditProfileModal } from '@/components/destiny/EditProfileModal';
+import { CalendarConversionEngine } from '@/lib/engines/calendar/calendar-engine';
+import { getRealtimeDate } from '@/lib/utils/date-utils';
 
 interface HeaderProps {
   onOpenMobileMenu?: () => void;
@@ -35,9 +37,16 @@ export function Header({
   onOpenAuth,
   onOpenMemberCenter,
 }: HeaderProps) {
-  const todayStr = '2026年9月13日 · 丙午年 丁酉月 辛未日';
   const { user, isAuthenticated, signOut, loading } = useAuth();
   const { profile, updateProfile, isCloudSynced } = useUserProfile();
+
+  const todayStr = React.useMemo(() => {
+    const tz = profile?.timezone || 'Asia/Kuala_Lumpur';
+    const dateStr = getRealtimeDate(tz);
+    const [y, m, d] = dateStr.split('-');
+    const fp = CalendarConversionEngine.getFourPillars(dateStr, '10:00:00', true);
+    return `${y}年${Number(m)}月${Number(d)}日 · ${fp.yearStem}${fp.yearBranch}年 ${fp.monthStem}${fp.monthBranch}月 ${fp.dayStem}${fp.dayBranch}日`;
+  }, [profile?.timezone]);
 
   // Internal modal fallback if not passed by parent
   const [internalAuthOpen, setInternalAuthOpen] = useState(false);

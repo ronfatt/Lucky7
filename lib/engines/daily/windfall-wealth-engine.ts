@@ -10,6 +10,8 @@ import type {
   ZiWeiPalaceInstance,
 } from '../../../types/zwtsp.ts';
 import { FOUR_TRANSFORMATIONS_BY_STEM } from '../ziwei/ziwei-engine.ts';
+import { CalendarConversionEngine } from '../calendar/calendar-engine.ts';
+import { DailyEngine } from './daily-engine.ts';
 import { getRealtimeDate } from '../../utils/date-utils.ts';
 
 export type WindfallSuitability = 'SUITABLE' | 'NEUTRAL' | 'UNSUITABLE' | 'STRICTLY_AVOID';
@@ -422,39 +424,22 @@ export class WindfallWealthEngine {
         drawTypeZh = '特别开彩日 (Special Draw)';
       }
 
-      // Pseudo day stem & branch deterministic calculation
-      const stemIdx = (i + 4) % 10;
-      const branchIdx = (i + 0) % 12;
-      const dayStemBranch = `${STEMS[stemIdx]}${BRANCHES[branchIdx]}日`;
+      // Astronomical day stem & branch calculation
+      const fourPillars = CalendarConversionEngine.getFourPillars(dateStr, '10:00:00', true);
+      const dayStemBranch = `${fourPillars.dayStem}${fourPillars.dayBranch}日`;
 
-      // Modulate base score
-      let score = 55 + ((i * 7 + 3) % 35);
-      if (isDrawDay && dayOfWeek === 3) score += 6; // Wednesday boost
-      if (dayOfWeek === 1) score -= 8; // Monday sluggish
+      // Genuine windfall evaluation against that date's dynamic signature
+      const dailySig = DailyEngine.generateDailySignature(dateStr);
+      const dayEval = chart && chart.palaces && chart.palaces.length > 0 ? this.evaluateWindfall(chart, dailySig) : null;
+
+      let score = dayEval ? dayEval.score : 55 + ((i * 7 + 3) % 35);
+      if (isDrawDay && dayOfWeek === 3) score += 4; // Wednesday draw boost
 
       score = Math.min(96, Math.max(25, score));
 
-      let suitability: WindfallSuitability = 'NEUTRAL';
-      let suitabilityZh = '运势平和 · 随缘参考';
-      let advice = '气象平静，若遇开彩仅宜微量自娱，理性至上。';
-
-      if (score >= 78) {
-        suitability = 'SUITABLE';
-        suitabilityZh = '吉星拱照 · 适度参与';
-        advice = '财福线得生发之力，适宜结合推演母码与开彩规律从容参与。';
-      } else if (score >= 65) {
-        suitability = 'SUITABLE';
-        suitabilityZh = '偏财平顺 · 顺势而动';
-        advice = '气运清明，心态放平，可小试心水号码。';
-      } else if (score <= 40) {
-        suitability = 'STRICTLY_AVOID';
-        suitabilityZh = '煞星相冲 · 严禁投注';
-        advice = '冲耗过重，极易冲动失策，即便开彩日亦需坚守不动！';
-      } else {
-        suitability = 'UNSUITABLE';
-        suitabilityZh = '阻滞暗耗 · 谨守为宜';
-        advice = '阻力稍重，静观其变，休养生息。';
-      }
+      const suitability = dayEval ? dayEval.suitability : (score >= 70 ? 'SUITABLE' : score <= 45 ? 'UNSUITABLE' : 'NEUTRAL');
+      const suitabilityZh = dayEval ? dayEval.suitabilityZh : (score >= 70 ? '吉星拱照 · 适度参与' : score <= 45 ? '阻滞暗耗 · 谨守为宜' : '运势平和 · 随缘参考');
+      const advice = dayEval ? dayEval.verdictAdvice : '气运清明，心态放平，可小试心水号码。';
 
       forecast.push({
         date: dateStr,
