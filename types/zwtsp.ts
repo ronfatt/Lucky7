@@ -121,6 +121,8 @@ export interface TransformationInstance {
 export interface ZiWeiPalaceInstance {
   palaceName: string; // 命宫, 兄弟宫...
   branch: string; // 子, 丑, 寅...
+  stem?: string; // 甲, 乙, 丙...
+  stemBranch?: string; // 壬午, 辛巳...
   position: number; // 0 to 11
   element: WuXingElement;
   stars: StarPlacement[];
@@ -133,8 +135,12 @@ export interface ZiWeiPalaceInstance {
 export interface ZiWeiChartData {
   bureau: ZiWeiBureau;
   lifePalaceBranch: string;
+  lifePalaceStem?: string;
+  lifePalaceStemBranch?: string;
   lifePalacePosition: number;
   bodyPalaceBranch: string;
+  bodyPalaceStem?: string;
+  bodyPalaceStemBranch?: string;
   bodyPalacePosition: number;
   palaces: ZiWeiPalaceInstance[];
   calculationVersion: string;

@@ -99,8 +99,8 @@ export function VisualZiWeiChart({ chart }: { chart: ZiWeiChartData }) {
             </CardTitle>
             <CardDescription className="text-xs mt-0.5">
               五行局: <strong className="text-gold-champagne">{chart.bureau}</strong> · 
-              命宫落支: <strong className="text-slate-200">{chart.lifePalaceBranch}位</strong> · 
-              身宫落支: <strong className="text-slate-200">{chart.bodyPalaceBranch}位</strong>
+              命宫落支: <strong className="text-slate-200">{chart.lifePalaceStemBranch || `${chart.lifePalaceBranch}位`}</strong> · 
+              身宫落支: <strong className="text-slate-200">{chart.bodyPalaceStemBranch || `${chart.bodyPalaceBranch}位`}</strong>
             </CardDescription>
           </div>
 
@@ -185,7 +185,7 @@ export function VisualZiWeiChart({ chart }: { chart: ZiWeiChartData }) {
                         )}
                       </div>
                       <span className={`text-xs font-mono font-bold ${elMeta.text}`}>
-                        {p.branch}位 · {elMeta.zh}
+                        {p.stemBranch || p.branch}位 · {elMeta.zh}
                       </span>
                     </div>
 
@@ -264,7 +264,7 @@ export function VisualZiWeiChart({ chart }: { chart: ZiWeiChartData }) {
                     <div>
                       <div className="flex items-center gap-1.5 font-serif font-bold">
                         <span>{p.palaceName}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">({p.branch})</span>
+                        <span className="text-[10px] text-slate-400 font-mono">({p.stemBranch || p.branch})</span>
                         {isLife && <Badge variant="gold" className="text-[8px] px-1 py-0">命</Badge>}
                       </div>
                       <div className="text-[11px] text-slate-400 mt-1">
@@ -328,8 +328,8 @@ export function VisualZiWeiChart({ chart }: { chart: ZiWeiChartData }) {
                           {isLife && <Badge variant="gold" className="text-[8px] px-1 py-0">命</Badge>}
                           {isBody && <Badge variant="outline" className="text-[8px] px-1 py-0 text-amber-300 border-amber-500/40">身</Badge>}
                         </div>
-                        <span className={`text-[10px] font-mono ${elMeta.text}`}>
-                          {p.branch}
+                        <span className={`text-[10px] font-mono font-bold ${elMeta.text}`}>
+                          {p.stemBranch || p.branch}
                         </span>
                       </div>
 
@@ -375,6 +375,42 @@ export function VisualZiWeiChart({ chart }: { chart: ZiWeiChartData }) {
                     </div>
                   );
                 })}
+
+                {/* Traditional 2x2 Center Hall (中宫 / 命盘中堂) */}
+                <div
+                  style={{ gridRow: '2 / span 2', gridColumn: '2 / span 2' }}
+                  className="rounded-xl border border-gold-500/25 bg-gradient-to-b from-obsidian-900/95 to-obsidian-950/95 p-4 flex flex-col justify-between items-center text-center shadow-inner"
+                >
+                  <div className="w-full">
+                    <div className="text-[10px] tracking-widest text-gold-400 font-serif font-bold uppercase flex items-center justify-center gap-1">
+                      <Sparkles className="w-3 h-3 text-gold-champagne" />
+                      <span>紫微天盘中堂</span>
+                      <Sparkles className="w-3 h-3 text-gold-champagne" />
+                    </div>
+                    <div className="mt-2 py-1 px-3 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-200 text-xs font-serif font-bold inline-block">
+                      {chart.bureau}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 w-full text-left bg-obsidian-950/70 p-2 rounded-lg border border-slate-800/80 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 block text-[9px]">命宫干支</span>
+                      <span className="font-serif font-bold text-gold-200">
+                        {chart.lifePalaceStemBranch || `${chart.lifePalaceBranch}位`}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[9px]">身宫干支</span>
+                      <span className="font-serif font-bold text-amber-200">
+                        {chart.bodyPalaceStemBranch || `${chart.bodyPalaceBranch}位`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-[9px] text-slate-500 font-mono tracking-tight">
+                    正统五虎遁元 · 纳音六十甲子定局
+                  </div>
+                </div>
               </div>
             </div>
           </div>

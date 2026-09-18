@@ -12,8 +12,51 @@ import type {
   ZiWeiChartData,
   ZiWeiPalaceInstance,
 } from '../../../types/zwtsp.ts';
-import { CalendarConversionEngine, EARTHLY_BRANCHES } from '../calendar/calendar-engine.ts';
+import { CalendarConversionEngine, EARTHLY_BRANCHES, HEAVENLY_STEMS } from '../calendar/calendar-engine.ts';
 import { BRANCH_ELEMENTS } from '../calendar/calendar-engine.ts';
+
+// 60 JiaZi NaYin to Five Elements Bureau (六十甲子纳音定五行局)
+export const NAYIN_BUREAU_MAP: Record<string, ZiWeiBureau> = {
+  // 水二局 (涧下水、泉中水、长流水、天河水、大溪水、大海水)
+  丙子: '水二局', 丁丑: '水二局',
+  甲申: '水二局', 乙酉: '水二局',
+  壬辰: '水二局', 癸巳: '水二局',
+  丙午: '水二局', 丁未: '水二局',
+  甲寅: '水二局', 乙卯: '水二局',
+  壬戌: '水二局', 癸亥: '水二局',
+
+  // 木三局 (大林木、杨柳木、松柏木、平地木、桑柘木、石榴木)
+  戊辰: '木三局', 己巳: '木三局',
+  壬午: '木三局', 癸未: '木三局',
+  庚寅: '木三局', 辛卯: '木三局',
+  戊戌: '木三局', 己亥: '木三局',
+  壬子: '木三局', 癸丑: '木三局',
+  庚申: '木三局', 辛酉: '木三局',
+
+  // 金四局 (海中金、剑锋金、白蜡金、沙中金、金箔金、钗钏金)
+  甲子: '金四局', 乙丑: '金四局',
+  壬申: '金四局', 癸酉: '金四局',
+  庚辰: '金四局', 辛巳: '金四局',
+  甲午: '金四局', 乙未: '金四局',
+  壬寅: '金四局', 癸卯: '金四局',
+  庚戌: '金四局', 辛亥: '金四局',
+
+  // 土五局 (路旁土、城头土、屋上土、壁上土、大驿土、沙中土)
+  庚午: '土五局', 辛未: '土五局',
+  戊寅: '土五局', 己卯: '土五局',
+  丙戌: '土五局', 丁亥: '土五局',
+  庚子: '土五局', 辛丑: '土五局',
+  戊申: '土五局', 己酉: '土五局',
+  丙辰: '土五局', 丁巳: '土五局',
+
+  // 火六局 (炉中火、山头火、霹雳火、山下火、覆灯火、天上火)
+  丙寅: '火六局', 丁卯: '火六局',
+  甲戌: '火六局', 乙亥: '火六局',
+  戊子: '火六局', 己丑: '火六局',
+  丙申: '火六局', 丁酉: '火六局',
+  甲辰: '火六局', 乙巳: '火六局',
+  戊午: '火六局', 己未: '火六局',
+};
 
 // 12 Standard Zi Wei Palaces in counter-clockwise sequence
 export const PALACE_NAMES = [
@@ -99,10 +142,10 @@ export class ZiWeiEngine {
     const bodyBranchIdx = ((lMonth - 1) + (hourBranchIndex - 1)) % 12;
     const bodyPalaceBranch = PALACE_BRANCH_ORDER[bodyBranchIdx];
 
-    // Five Elements Bureau
+    // Five Elements Bureau (derived from Life Palace Stem-Branch NaYin)
     const bureau = this.calculateBureau(fourPillars.yearStem, lifePalaceBranch);
 
-    // Generate 12 Palaces
+    // Generate 12 Palaces with Heavenly Stems (五虎遁元)
     const palaces: ZiWeiPalaceInstance[] = [];
     for (let i = 0; i < 12; i++) {
       // In counter-clockwise direction from Life Palace
@@ -110,10 +153,14 @@ export class ZiWeiEngine {
       const branch = PALACE_BRANCH_ORDER[branchIdx];
       const palaceName = PALACE_NAMES[i];
       const element = BRANCH_ELEMENTS[branch];
+      const stem = this.getPalaceStem(fourPillars.yearStem, branch);
+      const stemBranch = `${stem}${branch}`;
 
       palaces.push({
         palaceName,
         branch,
+        stem,
+        stemBranch,
         position: i,
         element,
         stars: [],
@@ -130,11 +177,18 @@ export class ZiWeiEngine {
     // Place Birth Year Four Transformations
     this.placeFourTransformations(palaces, fourPillars.yearStem);
 
+    const lifeStem = this.getPalaceStem(fourPillars.yearStem, lifePalaceBranch);
+    const bodyStem = this.getPalaceStem(fourPillars.yearStem, bodyPalaceBranch);
+
     return {
       bureau,
       lifePalaceBranch,
+      lifePalaceStem: lifeStem,
+      lifePalaceStemBranch: `${lifeStem}${lifePalaceBranch}`,
       lifePalacePosition: 0,
       bodyPalaceBranch,
+      bodyPalaceStem: bodyStem,
+      bodyPalaceStemBranch: `${bodyStem}${bodyPalaceBranch}`,
       bodyPalacePosition: palaces.findIndex(p => p.isBodyPalace),
       palaces,
       calculationVersion: this.VERSION,
@@ -143,16 +197,32 @@ export class ZiWeiEngine {
   }
 
   /**
-   * Calculates Five Elements Bureau (五行局)
+   * Calculates the Heavenly Stem of a Palace branch using Five Tigers Dun (五虎遁元)
+   * 甲己之年丙作首，乙庚之岁戊为头，丙辛必定寻庚起，丁壬壬位顺行流，戊癸何方发甲寅好追求。
+   */
+  public static getPalaceStem(yearStem: string, branch: string): string {
+    const startStemMap: Record<string, number> = {
+      甲: 2, 己: 2, // 丙
+      乙: 4, 庚: 4, // 戊
+      丙: 6, 辛: 6, // 庚
+      丁: 8, 壬: 8, // 壬
+      戊: 0, 癸: 0, // 甲
+    };
+    const startStemIdx = startStemMap[yearStem] ?? 2;
+    const branchOffsetFromYin = PALACE_BRANCH_ORDER.indexOf(branch as any);
+    if (branchOffsetFromYin === -1) return '';
+    const stemIdx = (startStemIdx + branchOffsetFromYin) % 10;
+    return HEAVENLY_STEMS[stemIdx];
+  }
+
+  /**
+   * Calculates Five Elements Bureau (五行局) via canonical 60 JiaZi NaYin
+   * Based on the Heavenly Stem and Earthly Branch of the Life Palace (命宫干支纳音)
    */
   public static calculateBureau(yearStem: string, lifePalaceBranch: string): ZiWeiBureau {
-    const stemGroup = ['甲己', '乙庚', '丙辛', '丁壬', '戊癸'].findIndex(g => g.includes(yearStem));
-    const branchIdx = PALACE_BRANCH_ORDER.indexOf(lifePalaceBranch as any);
-
-    // NaYin bureau table index
-    const bureauIndex = (stemGroup + Math.floor(branchIdx / 2)) % 5;
-    const bureaus: ZiWeiBureau[] = ['水二局', '木三局', '金四局', '土五局', '火六局'];
-    return bureaus[bureauIndex];
+    const lifeStem = this.getPalaceStem(yearStem, lifePalaceBranch);
+    const stemBranch = `${lifeStem}${lifePalaceBranch}`;
+    return NAYIN_BUREAU_MAP[stemBranch] || '水二局';
   }
 
   /**
