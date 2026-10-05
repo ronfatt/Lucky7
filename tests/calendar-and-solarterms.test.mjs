@@ -45,4 +45,33 @@ describe('ZWTSP Calendar & Solar Terms Verification', () => {
     assert.equal(termInfo.season, 'Autumn');
     assert.ok(termInfo.seasonZh.includes('秋季'));
   });
+
+  test('BaZi Month Pillar conforms strictly to 12 Solar Terms (交节换月)', () => {
+    // Qing Qing Joan's birthday: 1982-12-14 06:00:00
+    // Past 大雪 (1982-12-07), thus entered 子月!
+    // In 壬戌 year: Five Tigers for 壬 produces 壬子月 (NOT 辛亥月)!
+    const fpJoan = CalendarConversionEngine.getFourPillars('1982-12-14', '06:00:00', true);
+    assert.equal(fpJoan.yearStem, '壬');
+    assert.equal(fpJoan.yearBranch, '戌');
+    assert.equal(fpJoan.monthStem, '壬');
+    assert.equal(fpJoan.monthBranch, '子', 'Must be 子月 after 大雪');
+    assert.equal(fpJoan.dayStem, '辛');
+    assert.equal(fpJoan.dayBranch, '未');
+    assert.equal(fpJoan.hourStem, '辛');
+    assert.equal(fpJoan.hourBranch, '卯');
+  });
+
+  test('BaZi Year Pillar transitions exactly at LiChun (立春 315°)', () => {
+    // 1983-01-15: Before 1983 LiChun -> belongs to 壬戌 year, 癸丑 month
+    const fpPre = CalendarConversionEngine.getFourPillars('1983-01-15', '12:00:00', true);
+    assert.equal(fpPre.yearStem, '壬');
+    assert.equal(fpPre.yearBranch, '戌');
+    assert.equal(fpPre.monthBranch, '丑');
+
+    // 1983-02-05: After 1983 LiChun -> transitions to 癸亥 year, 甲寅 month
+    const fpPost = CalendarConversionEngine.getFourPillars('1983-02-05', '12:00:00', true);
+    assert.equal(fpPost.yearStem, '癸');
+    assert.equal(fpPost.yearBranch, '亥');
+    assert.equal(fpPost.monthBranch, '寅');
+  });
 });

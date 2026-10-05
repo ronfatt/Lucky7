@@ -4,6 +4,7 @@
 // ==========================================================
 
 import type { SolarTermInfo } from '../../../types/zwtsp.ts';
+import { CalendarConversionEngine } from './calendar-engine.ts';
 
 export const SOLAR_TERMS = [
   '小寒', '大寒', '立春', '雨水', '惊蛰', '春分',
@@ -12,19 +13,11 @@ export const SOLAR_TERMS = [
   '寒露', '霜降', '立冬', '小雪', '大雪', '冬至'
 ] as const;
 
-// Approximate solar term offsets in days from reference century
-const SOLAR_TERM_BASE = [
-  6.0, 20.5, 4.0, 19.0, 6.0, 21.0,
-  5.0, 20.5, 6.0, 21.5, 6.0, 21.5,
-  7.0, 23.0, 8.0, 23.5, 8.0, 23.5,
-  8.5, 24.0, 7.5, 22.5, 7.5, 22.0
-];
-
 export class SolarTermEngine {
-  public static readonly VERSION = 'SOLAR-V1.0';
+  public static readonly VERSION = 'SOLAR-V2.0';
 
   /**
-   * Resolves the current Solar Term for any Gregorian date
+   * Resolves the exact Solar Term for any Gregorian date via solar ecliptic longitude
    */
   public static getSolarTermInfo(dateStr: string): SolarTermInfo {
     const parts = dateStr.split('-').map(Number);
@@ -32,34 +25,12 @@ export class SolarTermEngine {
     const month = parts[1]; // 1-12
     const day = parts[2];   // 1-31
 
-    // Determine the two candidate terms for this month
-    const termIndex1 = (month - 1) * 2;
-    const termIndex2 = termIndex1 + 1;
-
-    const termDay1 = Math.floor(SOLAR_TERM_BASE[termIndex1]);
-    const termDay2 = Math.floor(SOLAR_TERM_BASE[termIndex2]);
-
-    let currentTerm: string;
-    let prevTerm: string;
-    let nextTerm: string;
-
-    if (day < termDay1) {
-      // Prior to 1st term of month: current term is 2nd term of previous month
-      const prevIdx = (termIndex1 - 1 + 24) % 24;
-      currentTerm = SOLAR_TERMS[prevIdx];
-      prevTerm = SOLAR_TERMS[(prevIdx - 1 + 24) % 24];
-      nextTerm = SOLAR_TERMS[termIndex1];
-    } else if (day >= termDay1 && day < termDay2) {
-      // Between 1st and 2nd term of month
-      currentTerm = SOLAR_TERMS[termIndex1];
-      prevTerm = SOLAR_TERMS[(termIndex1 - 1 + 24) % 24];
-      nextTerm = SOLAR_TERMS[termIndex2];
-    } else {
-      // At or after 2nd term of month
-      currentTerm = SOLAR_TERMS[termIndex2];
-      prevTerm = SOLAR_TERMS[termIndex1];
-      nextTerm = SOLAR_TERMS[(termIndex2 + 1) % 24];
-    }
+    const solarLon = CalendarConversionEngine.getSolarLongitude(year, month, day, 12);
+    // 24 terms: 15° each, starting from 285° (0: 小寒)
+    const termIndex = Math.floor(((solarLon - 285 + 360) % 360) / 15);
+    const currentTerm = SOLAR_TERMS[termIndex];
+    const prevTerm = SOLAR_TERMS[(termIndex - 1 + 24) % 24];
+    const nextTerm = SOLAR_TERMS[(termIndex + 1) % 24];
 
     // Determine season based on solar term
     let season: 'Spring' | 'Summer' | 'Autumn' | 'Winter' | 'FourSeasonsEnd' = 'Autumn';
@@ -82,8 +53,27 @@ export class SolarTermEngine {
       seasonZh = '四季末 · 坤土斡旋';
     }
 
-    const termStartStr = `${year}-${String(month).padStart(2, '0')}-${String(Math.max(1, day < termDay2 ? termDay1 : termDay2)).padStart(2, '0')}`;
-    const termEndStr = `${year}-${String(month).padStart(2, '0')}-${String(day < termDay1 ? termDay1 : termDay2).padStart(2, '0')}`;
+    // Find exact solar term start and end boundaries (within ~16 days)
+    let startD = new Date(Date.UTC(year, month - 1, day));
+    while (true) {
+      const prevD = new Date(startD.getTime() - 86400000);
+      const pLon = CalendarConversionEngine.getSolarLongitude(prevD.getUTCFullYear(), prevD.getUTCMonth() + 1, prevD.getUTCDate(), 12);
+      const pIdx = Math.floor(((pLon - 285 + 360) % 360) / 15);
+      if (pIdx !== termIndex) break;
+      startD = prevD;
+    }
+
+    let endD = new Date(Date.UTC(year, month - 1, day));
+    while (true) {
+      const nextD = new Date(endD.getTime() + 86400000);
+      const nLon = CalendarConversionEngine.getSolarLongitude(nextD.getUTCFullYear(), nextD.getUTCMonth() + 1, nextD.getUTCDate(), 12);
+      const nIdx = Math.floor(((nLon - 285 + 360) % 360) / 15);
+      if (nIdx !== termIndex) break;
+      endD = nextD;
+    }
+
+    const termStartStr = startD.toISOString().slice(0, 10);
+    const termEndStr = endD.toISOString().slice(0, 10);
 
     return {
       currentTerm,

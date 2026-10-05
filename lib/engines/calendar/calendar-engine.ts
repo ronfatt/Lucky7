@@ -190,7 +190,32 @@ export class CalendarConversionEngine {
   }
 
   /**
+   * Calculates the Sun's ecliptic longitude (太阳黄经, 0° to 360°)
+   * for an exact Gregorian calendar date and optional hour.
+   * 0° = 春分, 15° = 清明 ... 255° = 大雪 ... 315° = 立春
+   */
+  public static getSolarLongitude(year: number, month: number, day: number, hour: number = 12): number {
+    let y = year;
+    let m = month;
+    if (m <= 2) {
+      y -= 1;
+      m += 12;
+    }
+    const a = Math.floor(y / 100);
+    const b = 2 - a + Math.floor(a / 4);
+    const jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + (hour / 24) + b - 1524.5;
+    const T = (jd - 2451545.0) / 36525.0;
+    const L0 = 280.46646 + 36000.76983 * T + 0.0003032 * T * T;
+    const M = (357.52911 + 35999.05029 * T - 0.0001537 * T * T) * (Math.PI / 180);
+    const C = (1.914602 - 0.004817 * T) * Math.sin(M) + (0.019993 - 0.000101 * T) * Math.sin(2 * M) + 0.000289 * Math.sin(3 * M);
+    let trueLon = (L0 + C) % 360;
+    if (trueLon < 0) trueLon += 360;
+    return trueLon;
+  }
+
+  /**
    * Calculates the Four Pillars (八字) for a given Gregorian date and optional time
+   * Strictly follows orthodox BaZi rules: Year changes at 立春 (315°), Month changes at 12 Solar Terms (交节).
    */
   public static getFourPillars(dateStr: string, timeStr?: string, isHourKnown: boolean = true): FourPillarsData {
     const parts = dateStr.split('-').map(Number);
@@ -198,19 +223,35 @@ export class CalendarConversionEngine {
     const gMonth = parts[1];
     const gDay = parts[2];
 
-    const lunar = this.toLunarDate(dateStr);
+    let hourVal = 12;
+    if (isHourKnown && timeStr) {
+      const tParts = timeStr.split(':').map(Number);
+      if (!isNaN(tParts[0])) {
+        hourVal = tParts[0];
+      }
+    }
 
-    // Year Pillar: Year Stem & Branch based on Lunar Year
-    const yearStemIdx = (lunar.lunarYear - 4) % 10;
-    const yearBranchIdx = (lunar.lunarYear - 4) % 12;
+    const solarLon = this.getSolarLongitude(gYear, gMonth, gDay, hourVal);
+
+    // Year Pillar: in authentic BaZi, year changes at 立春 (Solar Longitude 315°)
+    let baziYear = gYear;
+    if (gMonth === 1 || (gMonth === 2 && solarLon < 315)) {
+      baziYear = gYear - 1;
+    }
+    const yearStemIdx = (baziYear - 4) % 10;
+    const yearBranchIdx = (baziYear - 4) % 12;
     const yearStem = HEAVENLY_STEMS[(yearStemIdx + 10) % 10];
     const yearBranch = EARTHLY_BRANCHES[(yearBranchIdx + 12) % 12];
 
-    // Month Pillar: Lunar Month + Five Tigers formula
-    const monthBranchIdx = (lunar.lunarMonth + 1) % 12; // 1st lunar month starts at 寅 (idx 2)
-    const monthBranch = EARTHLY_BRANCHES[monthBranchIdx];
+    // Month Pillar: in authentic BaZi, month changes at 12 Solar Terms (交节换月)
+    // 30° sectors starting from 立春 (315°):
+    // 寅(0: 315-345), 卯(1: 345-15), 辰(2: 15-45), 巳(3: 45-75), 午(4: 75-105), 未(5: 105-135)
+    // 申(6: 135-165), 酉(7: 165-195), 戌(8: 195-225), 亥(9: 225-255), 子(10: 255-285), 丑(11: 285-315)
+    const BAZI_MONTH_BRANCHES = ['寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥', '子', '丑'];
+    const monthOffset = Math.floor(((solarLon - 315 + 360) % 360) / 30);
+    const monthBranch = BAZI_MONTH_BRANCHES[monthOffset];
     const tigerStart = FIVE_TIGERS[yearStem] ?? 2;
-    const monthStemIdx = (tigerStart + (lunar.lunarMonth - 1)) % 10;
+    const monthStemIdx = (tigerStart + monthOffset) % 10;
     const monthStem = HEAVENLY_STEMS[monthStemIdx];
 
     // Day Pillar: Calculated via Julian Day Number
