@@ -621,6 +621,10 @@ export interface MotherCodeResult {
   confidence: 'LOW' | 'MEDIUM' | 'HIGH';
   resonantDigits: number[];
   summary: string;
+  sixMarkCode?: string;
+  sixMarkPair?: [number, number];
+  sixMarkFormatted?: string;
+  sixMarkExplanation?: string;
 }
 
 export type VariationType =

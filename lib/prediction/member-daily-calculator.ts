@@ -29,6 +29,10 @@ export interface MemberDailyPrediction {
   dayStemBranch: string;
   lunarDateStr: string;
   motherCode: string;
+  sixMarkCode?: string;
+  sixMarkPair?: [number, number];
+  sixMarkFormatted?: string;
+  sixMarkExplanation?: string;
   confidence: string;
   score: number;
   windfallScore: number;
@@ -115,7 +119,7 @@ export class MemberDailyCalculator {
       birthProfile.birthDate
     );
 
-    const motherCodeObj = MotherCodeEngine.extractMotherCode(candidates);
+    const motherCodeObj = MotherCodeEngine.extractMotherCode(candidates, vectors, fourPillars);
     const variations = VariationCodeEngine.generateVariations(
       motherCodeObj.motherCode,
       motherCodeObj.score,
@@ -156,6 +160,10 @@ export class MemberDailyCalculator {
       dayStemBranch: dailySig.dayStemBranch,
       lunarDateStr: `${dailySig.dayStemBranch}日`,
       motherCode: motherCodeObj.motherCode,
+      sixMarkCode: motherCodeObj.sixMarkCode,
+      sixMarkPair: motherCodeObj.sixMarkPair,
+      sixMarkFormatted: motherCodeObj.sixMarkFormatted,
+      sixMarkExplanation: motherCodeObj.sixMarkExplanation,
       confidence: motherCodeObj.confidence,
       score: Number(motherCodeObj.score.toFixed(1)),
       windfallScore: windfallAnalysis.score,

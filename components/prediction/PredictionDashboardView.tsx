@@ -76,6 +76,7 @@ import {
   Share2,
   Bookmark,
   Check,
+  Copy,
 } from 'lucide-react';
 import Link from 'next/link';
 import { getRealtimeDate } from '@/lib/utils/date-utils';
@@ -197,8 +198,8 @@ export function PredictionDashboardView({
   }, [vectors, personalDNA, activeNumbers, dailyDirection, realitySignals]);
 
   const motherCode: MotherCodeResult = useMemo(() => {
-    return MotherCodeEngine.extractMotherCode(candidates);
-  }, [candidates]);
+    return MotherCodeEngine.extractMotherCode(candidates, vectors, fourPillars);
+  }, [candidates, vectors, fourPillars]);
 
   const variations: VariationCodeRecord[] = useMemo(() => {
     return VariationCodeEngine.generateVariations(motherCode.motherCode, motherCode.score, 24);
@@ -402,6 +403,57 @@ export function PredictionDashboardView({
                   {motherCode.confidence}
                 </Badge>
               </div>
+            </div>
+
+            {/* 6D Six-Mark Extended Code Badge & Box */}
+            <div className="mb-6 p-4 rounded-xl bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-amber-500/50 text-amber-300 bg-amber-500/15 text-[10px]">
+                    6合彩 · 6D 拓展
+                  </Badge>
+                  <span className="text-xs text-amber-200/90 font-semibold">六爻成卦尊享码</span>
+                </div>
+                <div className="mt-1 flex items-baseline gap-2">
+                  <span className="font-mono text-2xl font-black text-amber-200 tracking-wider">
+                    {motherCode.motherCode}
+                  </span>
+                  <span className="text-amber-500 font-bold">·</span>
+                  <span className="font-mono text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-400/40">
+                    {motherCode.sixMarkPair ? `${motherCode.sixMarkPair[0]}${motherCode.sixMarkPair[1]}` : ''}
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    (= {motherCode.sixMarkCode})
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1 max-w-md">
+                  {motherCode.sixMarkExplanation}
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  if (motherCode.sixMarkCode) {
+                    navigator.clipboard.writeText(motherCode.sixMarkCode);
+                    setSavedSuccessNum(motherCode.sixMarkCode);
+                    setTimeout(() => setSavedSuccessNum(null), 2000);
+                  }
+                }}
+                className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 shrink-0 text-xs flex items-center gap-1.5"
+              >
+                {savedSuccessNum === motherCode.sixMarkCode ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>已复制 6D</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>复制 6D 码</span>
+                  </>
+                )}
+              </Button>
             </div>
 
             {/* Feature Breakdown Progress Bars */}

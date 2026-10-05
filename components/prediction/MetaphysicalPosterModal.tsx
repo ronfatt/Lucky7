@@ -160,8 +160,15 @@ export function MetaphysicalPosterModal({
 
     // Confidence & Score
     ctx.fillStyle = '#FCD34D';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText(`综合数理指数：${motherCode.score.toFixed(1)} 分  |  置信度：${motherCode.confidence}`, width / 2, 360);
+    ctx.font = 'bold 13px sans-serif';
+    ctx.fillText(`综合数理指数：${motherCode.score.toFixed(1)} 分  |  置信度：${motherCode.confidence}`, width / 2, 355);
+
+    if (motherCode.sixMarkCode) {
+      ctx.fillStyle = '#FBBF24';
+      ctx.font = 'bold 12px sans-serif';
+      ctx.letterSpacing = '1px';
+      ctx.fillText(`6合彩·6D拓展码：${motherCode.sixMarkFormatted || motherCode.sixMarkCode}`, width / 2, 373);
+    }
 
     // 6. Top 3 Variation Codes
     ctx.fillStyle = '#1E293B';

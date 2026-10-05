@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     10
   );
 
-  const motherCode = MotherCodeEngine.extractMotherCode(candidates);
+  const motherCode = MotherCodeEngine.extractMotherCode(candidates, vectors, fourPillars);
   const variations = VariationCodeEngine.generateVariations(motherCode.motherCode, motherCode.score, 20);
 
   return NextResponse.json({

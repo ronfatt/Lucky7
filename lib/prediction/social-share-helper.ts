@@ -14,6 +14,7 @@ export interface SocialShareParams {
   dateStr: string;
   dayStemBranch: string;
   motherCode: string;
+  sixMarkCode?: string;
   score: number;
   windfallAnalysis: WindfallWealthAnalysis;
   clothingAdvice: LuckyClothingAdvice;
@@ -30,6 +31,7 @@ export class SocialShareHelper {
       dateStr,
       dayStemBranch,
       motherCode,
+      sixMarkCode,
       score,
       windfallAnalysis,
       clothingAdvice,
@@ -43,7 +45,7 @@ export class SocialShareHelper {
 📅 推算日期：${dateStr} (${dayStemBranch})
 👤 命主：${profile.name} (${profile.gender === 'male' ? '乾造' : '坤造'})
 --------------------------------
-🎯 今日核心吉数：【 ${motherCode} 】
+🎯 今日4D核心吉数：【 ${motherCode} 】${sixMarkCode ? `\n🎲 6D六合彩拓展码：【 ${sixMarkCode} 】` : ''}
 ⭐ 数理契合指数：${score.toFixed(1)} / 100 分
 💰 今日偏财运势：${windfallAnalysis.suitabilityZh}
 ⏰ 纳气最佳吉时：${windfallAnalysis.auspiciousHour}

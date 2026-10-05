@@ -143,6 +143,8 @@ export function StreamlinedHomeView() {
     );
   }, [personalDNA, activeNumbers, dailyDirection, realitySignals, dailySig.dominantElement]);
 
+  const [numberMode, setNumberMode] = useState<'4D' | '6D'>('4D');
+
   const candidates = useMemo(() => {
     return CandidateGenerationEngine.generateCandidates(
       vectors,
@@ -157,8 +159,8 @@ export function StreamlinedHomeView() {
   }, [vectors, personalDNA, activeNumbers, dailyDirection, realitySignals, fourPillars, profile.birthDate]);
 
   const motherCode = useMemo(() => {
-    return MotherCodeEngine.extractMotherCode(candidates);
-  }, [candidates]);
+    return MotherCodeEngine.extractMotherCode(candidates, vectors, fourPillars);
+  }, [candidates, vectors, fourPillars]);
 
   const variations = useMemo(() => {
     return VariationCodeEngine.generateVariations(motherCode.motherCode, motherCode.score, 12);
@@ -205,22 +207,26 @@ export function StreamlinedHomeView() {
   }, [motherCode?.motherCode, selectedDate, dailySig?.dayStemBranch, windfallAnalysis?.auspiciousHour]);
 
   // Actions
+  const currentDisplayNumber = numberMode === '6D'
+    ? (motherCode.sixMarkCode || `${motherCode.motherCode}${motherCode.sixMarkPair?.join('') || ''}`)
+    : motherCode.motherCode;
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(motherCode.motherCode);
+    navigator.clipboard.writeText(currentDisplayNumber);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSave = () => {
     SavedPredictionsStore.save({
-      number: motherCode.motherCode,
-      sourceType: 'MOTHER_CODE',
-      sourceTitleZh: '主页当日核心母码',
+      number: currentDisplayNumber,
+      sourceType: numberMode === '6D' ? 'CANDIDATE' : 'MOTHER_CODE',
+      sourceTitleZh: numberMode === '6D' ? '主页当日6合彩尊享拓展码' : '主页当日核心母码',
       date: selectedDate,
       score: motherCode.score,
-      notes: `干支【${dailySig.dayStemBranch}】推算，偏财指数 ${windfallAnalysis.score} 分`,
+      notes: `干支【${dailySig.dayStemBranch}】推算，模式 ${numberMode}，偏财指数 ${windfallAnalysis.score} 分`,
     });
-    tracker.trackBookmark(motherCode.motherCode, '主页核心推演母码');
+    tracker.trackBookmark(currentDisplayNumber, numberMode === '6D' ? '主页6D六合彩拓展码' : '主页核心推演母码');
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2500);
   };
@@ -231,6 +237,7 @@ export function StreamlinedHomeView() {
       dateStr: selectedDate,
       dayStemBranch: dailySig.dayStemBranch,
       motherCode: motherCode.motherCode,
+      sixMarkCode: motherCode.sixMarkCode,
       score: motherCode.score,
       windfallAnalysis,
       clothingAdvice,
@@ -240,8 +247,8 @@ export function StreamlinedHomeView() {
     if (success) {
       tracker.track({
         eventType: 'prediction.share',
-        eventLabel: `分享每日测算报告 [${motherCode.motherCode}]`,
-        metadata: { number: motherCode.motherCode, date: selectedDate },
+        eventLabel: `分享每日测算报告 [${currentDisplayNumber}]`,
+        metadata: { number: currentDisplayNumber, date: selectedDate },
       });
       setIsReportCopied(true);
       setTimeout(() => setIsReportCopied(false), 2500);
@@ -375,22 +382,87 @@ export function StreamlinedHomeView() {
         <div className="absolute -top-12 -right-12 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-300 text-xs font-bold uppercase tracking-widest mb-2 sm:mb-3">
-          <Sparkles className="w-3.5 h-3.5 text-gold-400" />
-          <span>今日主打推算数字 · 核心母码 (4D)</span>
+        {/* Toggle Mode: 4D vs 6D */}
+        <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
+          <button
+            type="button"
+            onClick={() => setNumberMode('4D')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              numberMode === '4D'
+                ? 'bg-gradient-to-r from-gold-400 to-amber-500 text-obsidian-950 shadow-md shadow-gold-500/30 ring-1 ring-gold-300'
+                : 'bg-slate-900/90 text-slate-400 hover:text-slate-200 border border-slate-800'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>4D 万字核心码</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setNumberMode('6D')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+              numberMode === '6D'
+                ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-obsidian-950 shadow-md shadow-amber-500/30 ring-1 ring-yellow-300'
+                : 'bg-slate-900/90 text-slate-400 hover:text-slate-200 border border-slate-800'
+            }`}
+          >
+            <Layers className="w-3.5 h-3.5 text-amber-500" />
+            <span>6合彩 · 6D 尊享拓展码</span>
+            <span className="text-[10px] px-1.5 py-0.2 bg-black/30 rounded font-mono font-black">+2字</span>
+          </button>
         </div>
 
-        {/* The 4 Digits in Giant Luxury Font */}
+        {/* Number Display: 4D or 6D */}
         <div className="py-2 sm:py-4">
-          <div className="text-6xl sm:text-7xl md:text-8xl font-mono font-black tracking-wider sm:tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-gold-200 via-gold-400 to-amber-200 drop-shadow-[0_0_25px_rgba(234,179,8,0.35)] select-all">
-            {motherCode.motherCode}
-          </div>
+          {numberMode === '4D' ? (
+            <div className="text-6xl sm:text-7xl md:text-8xl font-mono font-black tracking-wider sm:tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-gold-200 via-gold-400 to-amber-200 drop-shadow-[0_0_25px_rgba(234,179,8,0.35)] select-all">
+              {motherCode.motherCode}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-3 select-all">
+                {/* 4D Base */}
+                <span className="text-5xl sm:text-6xl md:text-7xl font-mono font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-gold-200 via-gold-400 to-amber-200 drop-shadow-[0_0_20px_rgba(234,179,8,0.35)]">
+                  {motherCode.motherCode}
+                </span>
+
+                <span className="text-amber-500/70 text-3xl sm:text-5xl font-mono font-light px-0.5">·</span>
+
+                {/* 2 Extension digits in luxury highlighted container */}
+                <div className="relative group">
+                  <span className="inline-flex items-center text-5xl sm:text-6xl md:text-7xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-300 px-2 sm:px-3 py-0.5 rounded-2xl bg-amber-500/15 border-2 border-amber-400/50 shadow-[0_0_25px_rgba(245,158,11,0.4)]">
+                    {motherCode.sixMarkPair
+                      ? `${motherCode.sixMarkPair[0]}${motherCode.sixMarkPair[1]}`
+                      : (motherCode.sixMarkCode ? motherCode.sixMarkCode.slice(4) : '81')}
+                  </span>
+                  <span className="absolute -top-3.5 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold text-amber-300 bg-obsidian-950 px-2 py-0.5 rounded-full border border-amber-500/50 shadow-sm whitespace-nowrap">
+                    天机变卦+2字
+                  </span>
+                </div>
+              </div>
+
+              {/* 6D Metaphysical Explanation Banner */}
+              <div className="mt-3 max-w-xl mx-auto px-3.5 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-200/90 text-xs leading-relaxed text-center">
+                <span className="text-amber-400 font-bold mr-1">✦ 6合彩卦理:</span>
+                {motherCode.sixMarkExplanation || '以原四位为本命中枢，追加两位次级气场共振吉数，六位一体圆满成卦。'}
+              </div>
+            </div>
+          )}
+
           <div className="mt-2 sm:mt-3 flex items-center justify-center gap-2 sm:gap-3 text-xs text-slate-400 flex-wrap">
             <span>综合气场契合度: <strong className="text-gold-300 font-mono text-sm sm:text-base">{motherCode.score.toFixed(1)}</strong> 分</span>
             <span>·</span>
             <Badge variant="outline" className="border-gold-500/30 text-gold-300 text-[10px]">
               置信评级: {motherCode.confidence}
             </Badge>
+            {numberMode === '6D' && (
+              <>
+                <span>·</span>
+                <Badge variant="outline" className="border-amber-500/40 text-amber-400 bg-amber-500/10 text-[10px]">
+                  6合彩 / Toto 6D 适用
+                </Badge>
+              </>
+            )}
           </div>
         </div>
 
@@ -403,12 +475,12 @@ export function StreamlinedHomeView() {
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>已复制号码</span>
+                <span>已复制 {numberMode} 号码</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5" />
-                <span>复制号码</span>
+                <span>复制 {numberMode} 号码</span>
               </>
             )}
           </Button>
