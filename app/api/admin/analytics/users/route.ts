@@ -6,6 +6,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { localLogBuffer } from '@/lib/telemetry/log-buffer';
+import { CalendarConversionEngine } from '@/lib/engines/calendar/calendar-engine';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,32 @@ export async function GET(request: Request) {
       console.debug('[UsersAPI] profiles notice:', e);
     }
 
+    // Combine Auth Users and Profiles so zero members are missed
+    const seenIds = new Set<string>();
+    const allUsersToProcess: any[] = [];
+
+    authUsers.forEach((u) => {
+      seenIds.add(u.id);
+      allUsersToProcess.push(u);
+    });
+
+    profilesMap.forEach((prof, profId) => {
+      if (!seenIds.has(profId)) {
+        seenIds.add(profId);
+        allUsersToProcess.push({
+          id: profId,
+          email: prof.email || '',
+          created_at: prof.created_at,
+          user_metadata: {
+            name: prof.name,
+            gender: prof.gender,
+            birthDate: prof.birth_date,
+            birthTime: prof.birth_time,
+          },
+        });
+      }
+    });
+
     // 3. Fetch user activity stats from logs (both Supabase + local buffer)
     let logsMap = new Map<string, any[]>();
     const allLogs = [...localLogBuffer];
@@ -62,8 +89,8 @@ export async function GET(request: Request) {
       }
     });
 
-    // 4. Combine Users & Profiles & Activity Insights
-    let mergedUsers = authUsers.map((u) => {
+    // 4. Combine Users & Profiles & Activity Insights & BaZi Summaries
+    let mergedUsers = allUsersToProcess.map((u) => {
       const profile = profilesMap.get(u.id) || {};
       const userLogs = logsMap.get(u.id) || logsMap.get(u.email?.toLowerCase()) || [];
 
@@ -121,13 +148,26 @@ export async function GET(request: Request) {
       const latestDevice =
         userLogs[0]?.metadata?.device || profile.last_device || '未知设备';
 
+      const birthDate = profile.birth_date || u.user_metadata?.birthDate;
+      const birthTime = profile.birth_time || u.user_metadata?.birthTime;
+
+      let baziSummary = '未设置生辰';
+      let dayMaster = '未定';
+      if (birthDate) {
+        try {
+          const fp = CalendarConversionEngine.getFourPillars(birthDate, birthTime, Boolean(birthTime));
+          baziSummary = `${fp.yearStem}${fp.yearBranch} ${fp.monthStem}${fp.monthBranch} ${fp.dayStem}${fp.dayBranch} ${fp.hourStem && fp.hourBranch ? fp.hourStem + fp.hourBranch : ''}`.trim();
+          dayMaster = `${fp.dayMaster} (${fp.dayMasterElement})`;
+        } catch {}
+      }
+
       return {
         id: u.id,
         email: u.email,
         name: profile.name || u.user_metadata?.name || u.email?.split('@')[0] || '命主',
         gender: profile.gender || u.user_metadata?.gender || 'male',
-        birthDate: profile.birth_date || u.user_metadata?.birthDate || '1990-05-18',
-        birthTime: profile.birth_time || u.user_metadata?.birthTime || '09:30:00',
+        birthDate: birthDate || '未设置',
+        birthTime: birthTime || '未设置',
         membershipTier: profile.membership_tier || 'FREE',
         createdAt: u.created_at || profile.created_at,
         lastLoginAt: latestLogin,
@@ -136,6 +176,8 @@ export async function GET(request: Request) {
         totalActions: Math.max(userLogs.length, profile.total_actions || 1),
         lastDevice: latestDevice,
         habitTags,
+        baziSummary,
+        dayMaster,
         recentActionsCount: userLogs.length,
       };
     });

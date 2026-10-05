@@ -148,11 +148,21 @@ export function AdminUsersView({ users, loading, onRefresh }: UsersViewProps) {
 
                       {/* Bazi & Birth */}
                       <td className="p-3.5">
-                        <div className="text-[11px] text-slate-300">
-                          {u.gender === 'female' ? '坤造 (女)' : '乾造 (男)'}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold text-slate-200">
+                            {u.gender === 'female' ? '坤造' : '乾造'}
+                          </span>
+                          {u.dayMaster && u.dayMaster !== '未定' && (
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 border-gold-500/30 text-gold-300">
+                              {u.dayMaster}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-gold-200/90 font-mono font-bold mt-0.5">
+                          {u.baziSummary || '未设置生辰'}
                         </div>
                         <div className="text-[10px] text-slate-500 font-mono">
-                          {u.birthDate} · {u.birthTime ? u.birthTime.substring(0, 5) : '时辰未知'}
+                          公历: {u.birthDate} {u.birthTime ? u.birthTime.substring(0, 5) : ''}
                         </div>
                       </td>
 

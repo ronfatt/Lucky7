@@ -6,6 +6,11 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { localLogBuffer } from '@/lib/telemetry/log-buffer';
+import { CalendarConversionEngine } from '@/lib/engines/calendar/calendar-engine';
+import { SolarTermEngine } from '@/lib/engines/calendar/solar-terms';
+import { ZiWeiEngine } from '@/lib/engines/ziwei/ziwei-engine';
+import { PersonalNumberDNAEngine } from '@/lib/engines/personal-dna/personal-dna-engine';
+import type { BirthProfile } from '@/types/zwtsp';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,10 +29,106 @@ export async function GET(request: Request) {
     try {
       let query = supabaseAdmin.from('user_profiles').select('*');
       if (userId) query = query.eq('id', userId);
-      else if (email) query = query.eq('email', email);
+      else if (email) query = query.ilike('email', email);
       const { data } = await query.maybeSingle();
       profile = data;
     } catch {}
+
+    // Calculate Metaphysics Dossier (BaZi, Lunar, SolarTerm, ZiWei, PersonalDNA)
+    let metaphysics: any = null;
+    if (profile?.birth_date) {
+      try {
+        const birthDate = profile.birth_date;
+        const birthTime = profile.birth_time || '12:00:00';
+        const isHourKnown = Boolean(profile.birth_time);
+        const gender = profile.gender || 'male';
+
+        const birthProfile: BirthProfile = {
+          name: profile.name || '命主',
+          gender,
+          birthDate,
+          birthTime,
+          birthTimePrecision: isHourKnown ? 'EXACT' : 'APPROXIMATE',
+          timezone: profile.timezone || 'Asia/Kuala_Lumpur',
+          calendarType: 'gregorian',
+        };
+
+        const fourPillars = CalendarConversionEngine.getFourPillars(birthDate, birthTime, isHourKnown);
+        const lunar = CalendarConversionEngine.toLunarDate(birthDate);
+        const solarTerm = SolarTermEngine.getSolarTermInfo(birthDate);
+        const solarLon = CalendarConversionEngine.getSolarLongitude(
+          parseInt(birthDate.slice(0, 4), 10),
+          parseInt(birthDate.slice(5, 7), 10),
+          parseInt(birthDate.slice(8, 10), 10),
+          isHourKnown ? parseInt(birthTime.slice(0, 2), 10) : 12
+        );
+        const ziwei = ZiWeiEngine.generateChart(birthProfile);
+        const personalDna = PersonalNumberDNAEngine.generateDNA(birthProfile);
+
+        metaphysics = {
+          fourPillars: {
+            year: `${fourPillars.yearStem}${fourPillars.yearBranch}`,
+            month: `${fourPillars.monthStem}${fourPillars.monthBranch}`,
+            day: `${fourPillars.dayStem}${fourPillars.dayBranch}`,
+            hour: fourPillars.hourStem && fourPillars.hourBranch ? `${fourPillars.hourStem}${fourPillars.hourBranch}` : '未知',
+            yearStem: fourPillars.yearStem,
+            yearBranch: fourPillars.yearBranch,
+            monthStem: fourPillars.monthStem,
+            monthBranch: fourPillars.monthBranch,
+            dayStem: fourPillars.dayStem,
+            dayBranch: fourPillars.dayBranch,
+            hourStem: fourPillars.hourStem,
+            hourBranch: fourPillars.hourBranch,
+            yearElement: fourPillars.yearElement,
+            monthElement: fourPillars.monthElement,
+            dayElement: fourPillars.dayElement,
+            hourElement: fourPillars.hourElement,
+            dayMaster: fourPillars.dayMaster,
+            dayMasterElement: fourPillars.dayMasterElement,
+            elementDistribution: fourPillars.elementDistribution,
+          },
+          lunar: {
+            lunarYear: lunar.lunarYear,
+            lunarMonth: lunar.lunarMonth,
+            lunarDay: lunar.lunarDay,
+            isLeapMonth: lunar.isLeapMonth,
+            lunarString: lunar.lunarString,
+          },
+          solarTerm: {
+            currentTerm: solarTerm.currentTerm,
+            solarLongitude: Number(solarLon.toFixed(2)),
+            termStartDate: solarTerm.termStartDate,
+            termEndDate: solarTerm.termEndDate,
+            seasonZh: solarTerm.seasonZh,
+          },
+          ziwei: {
+            bureau: ziwei.bureau,
+            lifePalaceBranch: ziwei.lifePalaceBranch,
+            lifePalaceStemBranch: ziwei.lifePalaceStemBranch || `${ziwei.lifePalaceBranch}位`,
+            bodyPalaceBranch: ziwei.bodyPalaceBranch,
+            bodyPalaceStemBranch: ziwei.bodyPalaceStemBranch || `${ziwei.bodyPalaceBranch}位`,
+            isComplete: ziwei.isComplete,
+            keyPalaces: ziwei.palaces.filter(p => p.isLifePalace || p.palaceName === '财帛宫' || p.palaceName === '官禄宫' || p.palaceName === '迁移宫' || p.isBodyPalace).map(p => ({
+              name: p.palaceName,
+              branch: p.branch,
+              stemBranch: p.stemBranch,
+              element: p.element,
+              stars: p.stars.map(s => s.starName),
+              transformations: p.transformations.map(t => t.label),
+            })),
+          },
+          personalDna: {
+            coreNumbers: personalDna.coreNumbers,
+            supportNumbers: personalDna.supportNumbers,
+            weakNumbers: personalDna.weakNumbers,
+            dominantElement: personalDna.dominantElement,
+            weakestElement: personalDna.weakestElement,
+          }
+        };
+      } catch (metaErr) {
+        console.error('[UserDetailAPI] Metaphysics calculation error:', metaErr);
+      }
+    }
 
     // 2. Fetch User's Logs
     let userLogs = localLogBuffer.filter(
@@ -87,6 +188,7 @@ export async function GET(request: Request) {
       success: true,
       data: {
         profile,
+        metaphysics,
         activityTimeline: userLogs,
         savedPredictions,
         ledgerRecords,

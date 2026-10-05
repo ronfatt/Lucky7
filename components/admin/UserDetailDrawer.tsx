@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Zap,
   Sparkles,
+  Compass,
 } from 'lucide-react';
 
 interface UserDetailDrawerProps {
@@ -111,43 +112,143 @@ export function UserDetailDrawer({ userId, userEmail, onClose }: UserDetailDrawe
           {loading ? (
             <div className="py-20 text-center text-slate-400 font-serif space-y-3">
               <div className="w-8 h-8 rounded-full border-2 border-gold-500 border-t-transparent animate-spin mx-auto" />
-              <p className="text-xs">正在调取会员全生命周期记录与习惯画像...</p>
+              <p className="text-xs">正在调取会员全生命周期记录与玄学档案...</p>
             </div>
           ) : (
             <>
-              {/* 1. Profile & Bazi Summary */}
-              <Card className="bg-obsidian-950/80 border-gold-500/20 p-4 rounded-xl space-y-3">
-                <div className="text-xs font-bold text-gold-champagne flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  <span>本命玄学参数 (八字与紫微命造)</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                  <div className="p-2 rounded-lg bg-obsidian-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">命造格局</span>
-                    <span className="font-semibold text-slate-200">
-                      {data?.profile?.gender === 'female' ? '坤造 (女命)' : '乾造 (男命)'}
-                    </span>
+              {/* 1. Complete BaZi & Metaphysics Deep-Dive Card */}
+              {data?.metaphysics ? (
+                <Card className="bg-obsidian-950/90 border-gold-500/30 p-4 sm:p-5 rounded-2xl shadow-xl space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Compass className="w-4 h-4 text-gold-champagne" />
+                      <span className="font-serif font-bold text-sm text-gold-100">
+                        生辰八字四柱干支与命盘核验
+                      </span>
+                    </div>
+                    <Badge variant="gold" className="text-[10px] font-mono">
+                      {data.profile?.gender === 'female' ? '坤造 (女命)' : '乾造 (男命)'}
+                    </Badge>
                   </div>
-                  <div className="p-2 rounded-lg bg-obsidian-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">公历阳历生日</span>
-                    <span className="font-mono text-gold-300">
-                      {data?.profile?.birth_date || '未设置'}
-                    </span>
+
+                  {/* Four Pillars 4-Cards Grid */}
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    {/* Year Pillar */}
+                    <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800 flex flex-col justify-between min-h-[90px]">
+                      <span className="text-[10px] text-slate-400 font-serif">年柱 (Year)</span>
+                      <div className="text-base sm:text-lg font-serif font-bold text-gold-200">
+                        {data.metaphysics.fourPillars.year}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {data.metaphysics.fourPillars.yearElement}
+                      </span>
+                    </div>
+
+                    {/* Month Pillar */}
+                    <div className="p-3 rounded-xl bg-obsidian-900 border border-gold-500/40 shadow-sm flex flex-col justify-between min-h-[90px] relative">
+                      <span className="text-[10px] text-gold-300 font-serif font-bold flex items-center justify-center gap-0.5">
+                        <span>月柱 (Month)</span>
+                      </span>
+                      <div className="text-base sm:text-lg font-serif font-bold text-amber-200">
+                        {data.metaphysics.fourPillars.month}
+                      </div>
+                      <span className="text-[9px] text-amber-400 font-mono">
+                        {data.metaphysics.solarTerm.currentTerm}节气
+                      </span>
+                    </div>
+
+                    {/* Day Pillar */}
+                    <div className="p-3 rounded-xl bg-gradient-to-b from-gold-500/15 to-obsidian-900 border border-gold-400/60 shadow-gold-glow flex flex-col justify-between min-h-[90px]">
+                      <span className="text-[10px] text-gold-200 font-serif font-bold">日主 (元神)</span>
+                      <div className="text-base sm:text-lg font-serif font-bold text-white">
+                        {data.metaphysics.fourPillars.day}
+                      </div>
+                      <span className="text-[9px] text-gold-300 font-mono">
+                        {data.metaphysics.fourPillars.dayMaster}
+                      </span>
+                    </div>
+
+                    {/* Hour Pillar */}
+                    <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800 flex flex-col justify-between min-h-[90px]">
+                      <span className="text-[10px] text-slate-400 font-serif">时柱 (Hour)</span>
+                      <div className="text-base sm:text-lg font-serif font-bold text-slate-200">
+                        {data.metaphysics.fourPillars.hour}
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {data.metaphysics.fourPillars.hourElement || '未知'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-2 rounded-lg bg-obsidian-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">出生时辰</span>
-                    <span className="font-mono text-gold-300">
-                      {data?.profile?.birth_time || '未指定'}
-                    </span>
+
+                  {/* Calendar & Astronomy Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-obsidian-900/60 p-3 rounded-xl border border-slate-800/80">
+                    <div className="space-y-1">
+                      <div className="text-slate-400 flex items-center justify-between">
+                        <span>公历生辰:</span>
+                        <strong className="text-slate-200 font-mono">
+                          {data.profile?.birth_date} {data.profile?.birth_time || '(时辰未知)'}
+                        </strong>
+                      </div>
+                      <div className="text-slate-400 flex items-center justify-between">
+                        <span>农历生辰:</span>
+                        <strong className="text-gold-200 font-serif">
+                          {data.metaphysics.lunar.lunarString}
+                        </strong>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-slate-400 flex items-center justify-between">
+                        <span>节气与黄经:</span>
+                        <strong className="text-amber-200 font-mono">
+                          {data.metaphysics.solarTerm.currentTerm} ({data.metaphysics.solarTerm.solarLongitude}°)
+                        </strong>
+                      </div>
+                      <div className="text-slate-400 flex items-center justify-between">
+                        <span>所属时区:</span>
+                        <strong className="text-slate-300 font-mono">
+                          {data.profile?.timezone || '吉隆坡'}
+                        </strong>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-2 rounded-lg bg-obsidian-900 border border-slate-800">
-                    <span className="text-[10px] text-slate-400 block">所属时区</span>
-                    <span className="font-mono text-slate-300">
-                      {data?.profile?.timezone || '吉隆坡'}
-                    </span>
+
+                  {/* Element Distribution & ZiWei Bureau */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {/* Five Elements Breakdown */}
+                    <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800 space-y-1.5">
+                      <span className="text-[11px] text-slate-400 font-serif block">五行能量分布 (金木水火土)</span>
+                      <div className="flex items-center gap-1.5 text-xs font-mono">
+                        <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">金: {data.metaphysics.fourPillars.elementDistribution.Metal}</span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">木: {data.metaphysics.fourPillars.elementDistribution.Wood}</span>
+                        <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">水: {data.metaphysics.fourPillars.elementDistribution.Water}</span>
+                        <span className="px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">火: {data.metaphysics.fourPillars.elementDistribution.Fire}</span>
+                        <span className="px-2 py-0.5 rounded bg-amber-800/20 text-yellow-300 border border-yellow-500/20">土: {data.metaphysics.fourPillars.elementDistribution.Earth}</span>
+                      </div>
+                    </div>
+
+                    {/* ZiWei Destiny Overview */}
+                    <div className="p-3 rounded-xl bg-obsidian-900 border border-slate-800 space-y-1.5">
+                      <span className="text-[11px] text-slate-400 font-serif block">紫微天盘定局</span>
+                      <div className="text-xs space-y-0.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">五行局:</span>
+                          <strong className="text-gold-champagne">{data.metaphysics.ziwei.bureau}</strong>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-400">命宫 / 身宫:</span>
+                          <span className="font-mono text-slate-200">
+                            命在 {data.metaphysics.ziwei.lifePalaceStemBranch} · 身在 {data.metaphysics.ziwei.bodyPalaceStemBranch}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              ) : (
+                <Card className="bg-obsidian-950/80 border-slate-800 p-4 rounded-xl text-center text-xs text-slate-500">
+                  该用户尚未完善生辰八字（公历年月日时），暂时无法生成全息排盘。
+                </Card>
+              )}
 
               {/* 2. Key Telemetry Metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
